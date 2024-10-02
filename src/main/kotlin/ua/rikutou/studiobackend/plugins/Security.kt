@@ -1,4 +1,4 @@
-package com.example.plugins
+package ua.rikutou.studiobackend.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm

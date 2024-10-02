@@ -1,4 +1,4 @@
-package com.example.plugins
+package ua.rikutou.studiobackend.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
