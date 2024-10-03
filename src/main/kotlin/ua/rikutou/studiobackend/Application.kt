@@ -10,6 +10,9 @@ import ua.rikutou.studiobackend.plugins.configureDataBases
 import ua.rikutou.studiobackend.plugins.configureRouting
 import ua.rikutou.studiobackend.plugins.configureSecurity
 import ua.rikutou.studiobackend.plugins.configureSerialization
+import ua.rikutou.studiobackend.security.hashing.SHA256HashingService
+import ua.rikutou.studiobackend.security.token.JwtTokenService
+import ua.rikutou.studiobackend.security.token.TokenConfig
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -18,10 +21,23 @@ fun main(args: Array<String>) {
 fun Application.module() {
     val appConfig = environment.config
     val userDataSource = PostgresUserDataSource()
+    val tokenConfig = TokenConfig(
+        issuer = environment.config.property("jwt.issuer").getString(),
+        audience = environment.config.property("jwt.audience").getString(),
+        expiresIn = 365L * 1000L * 60L * 60L * 24L,
+        secret = System.getenv("JWT_SECRET")
+    )
+    val tokenService = JwtTokenService()
+    val hashingService = SHA256HashingService()
 
     configureDataBases(config = appConfig)
-    configureSecurity()
+    configureSecurity(config = tokenConfig)
     configureSerialization()
-    configureRouting()
+    configureRouting(
+        userDataSource = userDataSource,
+        hashingService = hashingService,
+        tokenService = tokenService,
+        tokenConfig = tokenConfig
+    )
 
 }
