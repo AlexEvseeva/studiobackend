@@ -8,6 +8,7 @@ jwt:
   domain: "https://jwt-provider-domain/"
   audience: "jwt-audience"
   realm: "ktor sample app"
+  issuer: "http://0.0.0.0:8080"
 storage:
   driverClassName: "org.postgresql.Driver"
   jdbcURL: "jdbc:postgresql://192.168.50.100:5432/studio_backend"

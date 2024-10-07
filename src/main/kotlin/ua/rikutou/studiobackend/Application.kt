@@ -6,13 +6,13 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ua.rikutou.studiobackend.data.user.PostgresUserDataSource
 import ua.rikutou.studiobackend.data.user.User
-import ua.rikutou.studiobackend.plugins.configureDataBases
 import ua.rikutou.studiobackend.plugins.configureRouting
 import ua.rikutou.studiobackend.plugins.configureSecurity
 import ua.rikutou.studiobackend.plugins.configureSerialization
 import ua.rikutou.studiobackend.security.hashing.SHA256HashingService
 import ua.rikutou.studiobackend.security.token.JwtTokenService
 import ua.rikutou.studiobackend.security.token.TokenConfig
+import java.sql.DriverManager
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -20,7 +20,12 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     val appConfig = environment.config
-    val userDataSource = PostgresUserDataSource()
+    val connection = DriverManager.getConnection(
+        appConfig.property("storage.jdbcURL").getString(),
+        appConfig.property("storage.user").getString(),
+        System.getenv("PG_PASSWORD")
+    )
+    val userDataSource = PostgresUserDataSource(connection)
     val tokenConfig = TokenConfig(
         issuer = environment.config.property("jwt.issuer").getString(),
         audience = environment.config.property("jwt.audience").getString(),
@@ -30,7 +35,6 @@ fun Application.module() {
     val tokenService = JwtTokenService()
     val hashingService = SHA256HashingService()
 
-    configureDataBases(config = appConfig)
     configureSecurity(config = tokenConfig)
     configureSerialization()
     configureRouting(

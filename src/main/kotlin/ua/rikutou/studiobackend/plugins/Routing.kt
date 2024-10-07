@@ -5,6 +5,7 @@ import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import ua.rikutou.studiobackend.data.user.UserDataSource
+import ua.rikutou.studiobackend.plugins.route.auth.auth
 import ua.rikutou.studiobackend.security.hashing.HashingService
 import ua.rikutou.studiobackend.security.token.JwtTokenService
 import ua.rikutou.studiobackend.security.token.TokenConfig
@@ -17,6 +18,11 @@ fun Application.configureRouting(
     tokenConfig: TokenConfig
     ) {
     routing {
-
+        auth(
+            userDataSource = userDataSource,
+            hashingService = hashingService,
+            tokenService = tokenService,
+            tokenConfig = tokenConfig
+        )
     }
 }
