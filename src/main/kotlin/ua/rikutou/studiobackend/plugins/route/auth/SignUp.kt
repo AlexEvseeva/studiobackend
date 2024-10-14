@@ -40,7 +40,7 @@ fun Route.signUp(
         )) {
             call.respond(HttpStatusCode.Conflict)
         } else {
-            call.respond(HttpStatusCode.OK)
+            call.respond(HttpStatusCode.OK, "{}")
         }
     }
 }

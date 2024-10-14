@@ -36,6 +36,10 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
     }
 
     override suspend fun insertUser(user: User): Boolean = withContext(Dispatchers.IO) {
+        getUserByUserName(name = user.name)?.let {
+            return@withContext false
+        }
+
         val statement = connection.prepareStatement(insertUser, Statement.RETURN_GENERATED_KEYS)
         statement.apply {
             setString(1, user.name)
