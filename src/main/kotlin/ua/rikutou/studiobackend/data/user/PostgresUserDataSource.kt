@@ -8,9 +8,11 @@ import java.sql.Statement
 
 class PostgresUserDataSource(private val connection: Connection) : UserDataSource {
     companion object {
-        private const val createTableUsers = "CREATE TABLE IF NOT EXISTS users (userId SERIAL PRIMARY KEY, name VARCHAR(200), password VARCHAR(200), salt VARCHAR(200))"
+        private const val createTableUsers = "CREATE TABLE IF NOT EXISTS users (userId SERIAL PRIMARY KEY, name VARCHAR(200), password VARCHAR(200), salt VARCHAR(200), studioId int)"
         private const val getUserByUserName = "SELECT * FROM users WHERE name = ?"
+        private const val getUserByUserId = "SELECT * FROM users WHERE userId = ?"
         private const val insertUser = "INSERT INTO users (name, password, salt) VALUES (?, ?, ?)"
+        private const val updateUserStudioId = "UPDATE users SET studioId = ? WHERE userId = ?"
     }
 
     init {
@@ -18,7 +20,24 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
             .createStatement()
             .executeUpdate(createTableUsers)
     }
-    override suspend fun getUserByUserName(name: String): User? = withContext(Dispatchers.IO){
+
+    override suspend fun getUserById(userId: Int): User? = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(getUserByUserId)
+        statement.setInt(1, userId)
+        val result = statement.executeQuery()
+
+        return@withContext if(result.next()) {
+            User(
+                userId = result.getInt("userId"),
+                name = result.getString("name"),
+                password = result.getString("password"),
+                salt = result.getString("salt"),
+                studioId = result.getInt("studioId")
+            )
+        } else null
+    }
+
+    override suspend fun getUserByUserName(name: String): User? = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(getUserByUserName)
         statement.setString(1, name)
         val result = statement.executeQuery()
@@ -29,7 +48,8 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
                 userId = result.getInt("userId"),
                 name = result.getString("name"),
                 password = result.getString("password"),
-                salt = result.getString("salt")
+                salt = result.getString("salt"),
+                studioId = result.getInt("studioId")
             )
         } else null
 
@@ -48,6 +68,15 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
         }.executeUpdate()
 
         return@withContext statement.generatedKeys.next()
+    }
+
+    override suspend fun updateUser(userId: Int, studioId: Int) = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(updateUserStudioId)
+        statement.apply {
+            setInt(1, studioId)
+            setInt(2, userId)
+        }.executeUpdate()
+        return@withContext
     }
 
 }

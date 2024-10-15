@@ -4,6 +4,8 @@ import ua.rikutou.studiobackend.plugins.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import ua.rikutou.studiobackend.data.location.PostgresLocationDataSource
+import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.user.PostgresUserDataSource
 import ua.rikutou.studiobackend.data.user.User
 import ua.rikutou.studiobackend.plugins.configureRouting
@@ -25,7 +27,11 @@ fun Application.module() {
         appConfig.property("storage.user").getString(),
         System.getenv("PG_PASSWORD")
     )
+
     val userDataSource = PostgresUserDataSource(connection)
+    val studioDataSource = PostgresStudioDataSource(connection)
+    val locationDataSource = PostgresLocationDataSource(connection)
+
     val tokenConfig = TokenConfig(
         issuer = environment.config.property("jwt.issuer").getString(),
         audience = environment.config.property("jwt.audience").getString(),
@@ -39,6 +45,8 @@ fun Application.module() {
     configureSerialization()
     configureRouting(
         userDataSource = userDataSource,
+        studioDataSource = studioDataSource,
+        locationDataSource = locationDataSource,
         hashingService = hashingService,
         tokenService = tokenService,
         tokenConfig = tokenConfig

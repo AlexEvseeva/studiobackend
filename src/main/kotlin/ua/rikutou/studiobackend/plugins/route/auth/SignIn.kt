@@ -49,7 +49,11 @@ fun Route.signIn(
             config = tokenConfig,
             TokenClaim(
                 name = "userId",
-                value = (user.userId ?: 0).toString()
+                value = (user.userId ?: -1).toString()
+            ),
+            TokenClaim(
+                name = "studioId",
+                value = (user.studioId ?: -1).toString()
             )
         )
 
