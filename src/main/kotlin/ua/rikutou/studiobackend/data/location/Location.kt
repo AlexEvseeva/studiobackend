@@ -12,4 +12,5 @@ data class Location(
     val height: Float,
     val type: String,
     val studioId: Int? = null,
+    val rentPrice: Float,
 )

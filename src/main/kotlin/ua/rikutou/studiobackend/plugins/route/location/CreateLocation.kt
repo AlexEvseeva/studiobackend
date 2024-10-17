@@ -40,7 +40,8 @@ fun Route.createLocation(
                 length = request.length,
                 height = request.height,
                 type = request.type,
-                studioId = if(studioId < 0) null else studioId
+                studioId = if(studioId < 0) null else studioId,
+                rentPrice = request.rentPrice,
             )
             val locationId = locationDataSource.insertLocation(location)
 

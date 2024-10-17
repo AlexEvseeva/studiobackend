@@ -24,5 +24,7 @@ fun Route.auth(
         userDataSource = userDataSource
     )
 
-    getSecretInfo()
+    me(
+        userDataSource = userDataSource
+    )
 }

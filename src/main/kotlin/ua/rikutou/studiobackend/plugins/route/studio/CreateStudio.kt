@@ -28,8 +28,10 @@ fun Route.createStudio(
                 Studio(
                     name = request.name,
                     address = request.address,
-                    phone = request.phone,
-                    email = request.email
+                    postIndex = request.postIndex,
+                    site = request.site,
+                    youtube = request.youtube,
+                    facebook = request.facebook,
                 )
             ) ?: run {
                 call.respond(HttpStatusCode.Conflict)
@@ -44,8 +46,11 @@ fun Route.createStudio(
                     studioId = studioId,
                     name = request.name,
                     address = request.address,
-                    phone = request.phone,
-                    email = request.email)
+                    postIndex = request.postIndex,
+                    site = request.site,
+                    youtube = request.youtube,
+                    facebook = request.facebook,
+                )
             )
         }
     }

@@ -9,5 +9,6 @@ data class LocationRequest(
     val width: Float,
     val length: Float,
     val height: Float,
-    val type: String
+    val type: String,
+    val rentPrice: Float,
 )

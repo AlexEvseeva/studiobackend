@@ -60,7 +60,10 @@ fun Route.signIn(
         call.respond(
             status = HttpStatusCode.OK,
             message = AuthResponse(
-                token = token
+                token = token,
+                userId = user.userId,
+                userName = user.name,
+                studioId = user.studioId
             )
         )
     }

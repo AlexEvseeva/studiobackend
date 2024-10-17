@@ -7,6 +7,8 @@ data class Studio (
     val studioId: Int? = null,
     val name: String,
     val address: String,
-    val phone: String,
-    val email: String,
+    val postIndex: String,
+    val site: String,
+    val youtube: String,
+    val facebook: String,
 )

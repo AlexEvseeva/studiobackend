@@ -6,6 +6,8 @@ import kotlinx.serialization.Serializable
 data class StudioRequest(
     val name: String,
     val address: String,
-    val phone: String,
-    val email: String,
+    val postIndex: String,
+    val site: String,
+    val youtube: String,
+    val facebook: String,
 )

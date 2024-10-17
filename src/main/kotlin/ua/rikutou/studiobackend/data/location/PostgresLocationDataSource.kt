@@ -7,8 +7,8 @@ import java.sql.Statement
 
 class PostgresLocationDataSource(private val connection: Connection) : LocationDataSource {
     companion object {
-        private const val createTableLocation = "CREATE TABLE IF NOT EXISTS location (locationId SERIAL PRIMARY KEY, name VARCHAR(100), address VARCHAR(200), width FLOAT, length FLOAT, height FLOAT, type VARCHAR(50), studioId INT)"
-        private const val insertLocation = "INSERT INTO location (name, address, width, length, height, type) VALUES (?, ?, ?, ?, ?, ?)"
+        private const val createTableLocation = "CREATE TABLE IF NOT EXISTS location (locationId SERIAL PRIMARY KEY, name VARCHAR(100), address VARCHAR(200), width FLOAT, length FLOAT, height FLOAT, type VARCHAR(50), studioId INT, rentPrice MONEY)"
+        private const val insertLocation = "INSERT INTO location (name, address, width, length, height, type, rentPrice) VALUES (?, ?, ?, ?, ?, ?, ?)"
         private const val getLocationByName = "SELECT * FROM location WHERE name = ?"
         private const val getLocationById = "SELECT * FROM location WHERE locationId = ?"
         private const val updateLocationStudioId = "UPDATE location SET studioId = ? WHERE locationId = ?"
@@ -31,6 +31,7 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
             setFloat(4, location.length)
             setFloat(5, location.height)
             setString(6, location.type)
+            setFloat(7, location.rentPrice)
         }.executeUpdate()
 
         return@withContext if(statement.generatedKeys.next()) {
@@ -52,7 +53,8 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
                 length = result.getFloat("length"),
                 height = result.getFloat("height"),
                 type = result.getString("type"),
-                studioId = result.getInt("studioId")
+                studioId = result.getInt("studioId"),
+                rentPrice = result.getFloat("rentPrice"),
             )
         } else null
     }
@@ -71,7 +73,8 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
                 length = result.getFloat("length"),
                 height = result.getFloat("height"),
                 type = result.getString("type"),
-                studioId = result.getInt("studioId")
+                studioId = result.getInt("studioId"),
+                rentPrice = result.getFloat("rentPrice"),
             )
         } else null
     }
