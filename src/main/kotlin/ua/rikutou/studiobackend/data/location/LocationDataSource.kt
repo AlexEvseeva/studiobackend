@@ -5,4 +5,5 @@ interface LocationDataSource {
     suspend fun getLocationByName(name: String): Location?
     suspend fun getLocationById(locationId: Int): Location?
     suspend fun updateLocation(locationId: Int, studioId: Int)
+    suspend fun getAllLocations(studioId: Int): List<Location>
 }

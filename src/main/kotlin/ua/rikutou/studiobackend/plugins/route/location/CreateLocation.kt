@@ -25,13 +25,6 @@ fun Route.createLocation(
                 call.respond(HttpStatusCode.BadRequest)
                 return@post
             }
-            val principal = call.principal<JWTPrincipal>()
-            var studioId = principal?.getClaim("studioId", String::class)?.toInt()  ?: -1
-            val userId = principal?.getClaim("userId", String::class)?.toInt() ?: -1
-            studioId = if(studioId < 0) {
-                userDataSource.getUserById(userId = userId)?.studioId ?: -1
-            } else -1
-
 
             val location = Location(
                 name = request.name,
@@ -40,7 +33,7 @@ fun Route.createLocation(
                 length = request.length,
                 height = request.height,
                 type = request.type,
-                studioId = if(studioId < 0) null else studioId,
+                studioId = request.studioId,
                 rentPrice = request.rentPrice,
             )
             val locationId = locationDataSource.insertLocation(location)

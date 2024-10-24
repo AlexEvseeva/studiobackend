@@ -10,12 +10,15 @@ fun Route.location(
     studioDataSource: StudioDataSource,
     userDataSource: UserDataSource
 ) {
-    getLocation(
+    getLocationById(
         locationDataSource = locationDataSource
     )
     createLocation(
         locationDataSource = locationDataSource,
         studioDataSource = studioDataSource,
         userDataSource = userDataSource
+    )
+    getLocations(
+        locationDataSource = locationDataSource
     )
 }
