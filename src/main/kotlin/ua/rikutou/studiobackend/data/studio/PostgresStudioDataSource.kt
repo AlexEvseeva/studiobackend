@@ -11,6 +11,7 @@ class PostgresStudioDataSource(private val connection: Connection) : StudioDataS
         private const val insertStudio = "INSERT INTO studio (name, address, postIndex, site, youtube, facebook) VALUES (?, ?, ?, ?, ?, ?)"
         private const val getStudioById = "SELECT * FROM studio WHERE studioId = ? LIMIT 1"
         private const val getStudioByName = "SELECT * FROM studio WHERE name = ?"
+        private const val updateStudio = "UPDATE studio SET name = ?, address = ?, postIndex = ?, site = ?, youtube = ?, facebook = ? WHERE studioId = ?"
     }
 
     init {
@@ -35,6 +36,21 @@ class PostgresStudioDataSource(private val connection: Connection) : StudioDataS
         return@withContext if (statement.generatedKeys.next()) {
             statement.generatedKeys.getInt(1)
         } else null
+    }
+
+    override suspend fun updateStudio(studio: Studio) = withContext(Dispatchers.IO) {
+        studio.studioId?.let {
+            connection.prepareStatement(updateStudio).apply {
+                setString(1, studio.name)
+                setString(2, studio.address)
+                setString(3, studio.postIndex)
+                setString(4, studio.site)
+                setString(5, studio.youtube)
+                setString(6, studio.facebook)
+                setInt(7, studio.studioId)
+            }.executeUpdate()
+        }
+        return@withContext
     }
 
     override suspend fun getStudioById(studioId: Int): Studio? = withContext(Dispatchers.IO) {

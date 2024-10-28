@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class StudioRequest(
+    val studioId: Int? = null,
     val name: String,
     val address: String,
     val postIndex: String,

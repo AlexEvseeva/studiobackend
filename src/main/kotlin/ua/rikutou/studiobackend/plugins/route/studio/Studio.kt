@@ -12,7 +12,7 @@ fun Route.studio(
         studioDataSource = studioDataSource
     )
 
-    createStudio(
+    createUpdateStudio(
         studioDataSource = studioDataSource,
         userDataSource = userDataSource
     )
