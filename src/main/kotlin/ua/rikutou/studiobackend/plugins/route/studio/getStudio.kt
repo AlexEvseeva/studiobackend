@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
 
 fun Route.getStudio(
@@ -12,12 +13,18 @@ fun Route.getStudio(
     authenticate {
         get("studio") {
             val studioId = call.parameters["studioId"]?.toInt() ?: run {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(
+                    status = HttpStatusCode.BadRequest,
+                    message = Error(
+                        code = HttpStatusCode.BadRequest.value,
+                        message = "Studio id not found."
+                    )
+                )
                 return@get
             }
 
             val studio = studioDataSource.getStudioById(studioId = studioId) ?: run {
-                call.respond(HttpStatusCode.NotFound)
+                call.respond(status = HttpStatusCode.NotFound, message = Error(code = HttpStatusCode.NotFound.value, message = "Studio not found."))
                 return@get
             }
 

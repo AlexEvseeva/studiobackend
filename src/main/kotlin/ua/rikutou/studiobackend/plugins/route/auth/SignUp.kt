@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.user.User
 import ua.rikutou.studiobackend.data.user.UserDataSource
 import ua.rikutou.studiobackend.data.user.requests.AuthRequest
@@ -17,7 +18,13 @@ fun Route.signUp(
         val request = call.runCatching {
             this.receiveNullable<AuthRequest>()
         }.getOrNull() ?: run {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = Error(
+                    code = HttpStatusCode.BadRequest.value,
+                    message = "Name or password not found."
+                )
+            )
             return@post
         }
 
@@ -25,7 +32,13 @@ fun Route.signUp(
         val isPasswordTooShort = request.password.length < 4
 
         if(areFieldsBlank || isPasswordTooShort) {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = Error(
+                    code = HttpStatusCode.BadRequest.value,
+                    message = "Name or password must not be blank or password is too short"
+                )
+            )
             return@post
         }
 
@@ -38,7 +51,13 @@ fun Route.signUp(
                 salt = saltedHash.salt
             )
         )) {
-            call.respond(HttpStatusCode.Conflict)
+            call.respond(
+                status = HttpStatusCode.Conflict,
+                message = Error(
+                    code = HttpStatusCode.Conflict.value,
+                    message = "User already exists"
+                )
+            )
         } else {
             call.respond(HttpStatusCode.OK, "{}")
         }

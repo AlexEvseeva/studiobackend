@@ -6,6 +6,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.location.Location
 import ua.rikutou.studiobackend.data.location.LocationDataSource
 import ua.rikutou.studiobackend.data.location.requests.LocationRequest
@@ -22,7 +23,13 @@ fun Route.createLocation(
             val request = call.runCatching {
                 this.receiveNullable<LocationRequest>()
             }.getOrNull() ?: run {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(
+                    status = HttpStatusCode.BadRequest,
+                    message = Error(
+                        code = HttpStatusCode.BadRequest.value,
+                        message = "Location's fields not found"
+                    )
+                )
                 return@post
             }
 

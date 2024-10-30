@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.user.UserDataSource
 import ua.rikutou.studiobackend.data.user.requests.AuthRequest
 import ua.rikutou.studiobackend.data.user.responses.AuthResponse
@@ -23,12 +24,24 @@ fun Route.signIn(
         val request = call.runCatching {
             this.receiveNullable<AuthRequest>()
         }.getOrNull() ?: run {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = Error(
+                    code = HttpStatusCode.BadRequest.value,
+                    message = "Name or password not found."
+                )
+            )
             return@post
         }
 
         val user = userDataSource.getUserByUserName(name = request.name) ?: run {
-            call.respond(HttpStatusCode.NotFound)
+            call.respond(
+                status = HttpStatusCode.NotFound,
+                message = Error(
+                    code = HttpStatusCode.NotFound.value,
+                    message = "User not found."
+                )
+            )
             return@post
         }
 
@@ -41,7 +54,13 @@ fun Route.signIn(
                 )
             )
         ) {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = Error(
+                    code = HttpStatusCode.BadRequest.value,
+                    message = "Incorrect user name or password."
+                )
+            )
             return@post
         }
 

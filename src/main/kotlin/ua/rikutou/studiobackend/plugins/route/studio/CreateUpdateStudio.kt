@@ -6,6 +6,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.studio.Studio
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
 import ua.rikutou.studiobackend.data.studio.requests.StudioRequest
@@ -20,7 +21,13 @@ fun Route.createUpdateStudio(
             val request = call.runCatching {
                 this.receiveNullable<StudioRequest>()
             }.getOrNull() ?: run {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(
+                    status = HttpStatusCode.BadRequest,
+                    message = Error(
+                        code = HttpStatusCode.BadRequest.value,
+                        message = "Studio fields not found."
+                    )
+                )
                 return@post
             }
 
@@ -49,7 +56,13 @@ fun Route.createUpdateStudio(
                         facebook = request.facebook,
                     )
                 ) ?: run {
-                    call.respond(HttpStatusCode.Conflict)
+                    call.respond(
+                        status = HttpStatusCode.Conflict,
+                        message = Error(
+                            code = HttpStatusCode.Conflict.value,
+                            message = "Studio already exists."
+                        )
+                    )
                     return@post
                 }
                 val principal = call.principal<JWTPrincipal>()
