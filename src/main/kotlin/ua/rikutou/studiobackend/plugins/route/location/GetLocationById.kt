@@ -5,10 +5,12 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import ua.rikutou.studiobackend.data.Error
+import ua.rikutou.studiobackend.data.gallery.GalleryDataSource
 import ua.rikutou.studiobackend.data.location.LocationDataSource
 
 fun Route.getLocationById (
-    locationDataSource: LocationDataSource
+    locationDataSource: LocationDataSource,
+    galleryDataSource: GalleryDataSource
 ) {
     authenticate {
         get("locationById") {
@@ -33,8 +35,9 @@ fun Route.getLocationById (
                 )
                 return@get
             }
+            val gallery = galleryDataSource.getGalleryByLocationId(locationId)
 
-            call.respond(status = HttpStatusCode.OK, message = location)
+            call.respond(status = HttpStatusCode.OK, message = location.copy(images = gallery))
         }
     }
 }

@@ -4,6 +4,7 @@ import ua.rikutou.studiobackend.plugins.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import ua.rikutou.studiobackend.data.gallery.PostgresGalleryDataSource
 import ua.rikutou.studiobackend.data.location.PostgresLocationDataSource
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.user.PostgresUserDataSource
@@ -31,6 +32,7 @@ fun Application.module() {
     val userDataSource = PostgresUserDataSource(connection)
     val studioDataSource = PostgresStudioDataSource(connection)
     val locationDataSource = PostgresLocationDataSource(connection)
+    val galleryDataSource = PostgresGalleryDataSource(connection)
 
     val tokenConfig = TokenConfig(
         issuer = environment.config.property("jwt.issuer").getString(),
@@ -44,6 +46,7 @@ fun Application.module() {
     configureSecurity(config = tokenConfig)
     configureSerialization()
     configureRouting(
+        galleryDataSource = galleryDataSource,
         userDataSource = userDataSource,
         studioDataSource = studioDataSource,
         locationDataSource = locationDataSource,

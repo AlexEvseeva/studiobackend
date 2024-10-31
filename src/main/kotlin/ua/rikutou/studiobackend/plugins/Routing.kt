@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import ua.rikutou.studiobackend.data.gallery.GalleryDataSource
 import ua.rikutou.studiobackend.data.location.LocationDataSource
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
 import ua.rikutou.studiobackend.data.user.UserDataSource
@@ -14,8 +15,10 @@ import ua.rikutou.studiobackend.security.hashing.HashingService
 import ua.rikutou.studiobackend.security.token.JwtTokenService
 import ua.rikutou.studiobackend.security.token.TokenConfig
 import ua.rikutou.studiobackend.security.token.TokenService
+import java.io.File
 
 fun Application.configureRouting(
+    galleryDataSource: GalleryDataSource,
     studioDataSource: StudioDataSource,
     userDataSource: UserDataSource,
     locationDataSource: LocationDataSource,
@@ -24,6 +27,11 @@ fun Application.configureRouting(
     tokenConfig: TokenConfig
     ) {
     routing {
+        staticFiles(
+            remotePath = "/uploads",
+            dir = File("uploads")
+        )
+
         auth(
             userDataSource = userDataSource,
             hashingService = hashingService,
@@ -37,7 +45,8 @@ fun Application.configureRouting(
         location(
             locationDataSource = locationDataSource,
             studioDataSource = studioDataSource,
-            userDataSource = userDataSource
+            userDataSource = userDataSource,
+            galleryDataSource = galleryDataSource,
         )
 
     }

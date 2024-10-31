@@ -1,6 +1,7 @@
 package ua.rikutou.studiobackend.data.location
 
 import kotlinx.serialization.Serializable
+import ua.rikutou.studiobackend.data.gallery.Gallery
 
 @Serializable
 data class Location(
@@ -13,4 +14,5 @@ data class Location(
     val type: String,
     val studioId: Int,
     val rentPrice: Float,
+    val images: List<Gallery>? = null,
 )

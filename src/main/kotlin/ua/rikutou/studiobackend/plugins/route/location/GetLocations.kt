@@ -6,10 +6,13 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import ua.rikutou.studiobackend.data.Error
+import ua.rikutou.studiobackend.data.gallery.Gallery
+import ua.rikutou.studiobackend.data.gallery.GalleryDataSource
 import ua.rikutou.studiobackend.data.location.LocationDataSource
 
 fun Route.getLocations(
-    locationDataSource: LocationDataSource
+    locationDataSource: LocationDataSource,
+    galleryDataSource: GalleryDataSource
 ) {
     authenticate {
         get("locations") {
@@ -32,7 +35,20 @@ fun Route.getLocations(
                 call.respond(status = HttpStatusCode.NotFound, message = Error(code = HttpStatusCode.NotFound.value, message = "Locations not found."))
                 return@get
             }
-            call.respond(HttpStatusCode.OK, message = locations)
+            val locationToGallery: Map<Int, List<Gallery>> = locations.map {
+                it.locationId
+            }.filterNotNull().map { locationId ->
+                locationId to galleryDataSource.getGalleryByLocationId(locationId)
+            }.toMap()
+
+            call.respond(
+                HttpStatusCode.OK,
+                message = locations.map { location ->
+                    location.copy(
+                        images = locationToGallery[location.locationId!!]
+                    )
+                }
+            )
         }
     }
 }
