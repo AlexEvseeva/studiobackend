@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.user.UserDataSource
 import ua.rikutou.studiobackend.data.user.requests.AuthRequest
@@ -14,13 +15,15 @@ import ua.rikutou.studiobackend.security.token.TokenClaim
 import ua.rikutou.studiobackend.security.token.TokenConfig
 import ua.rikutou.studiobackend.security.token.TokenService
 
-fun Route.signIn(
-    hashingService: HashingService,
-    userDataSource: UserDataSource,
-    tokenService: TokenService,
-    tokenConfig: TokenConfig
-) {
+fun Route.signIn() {
+
     post("signin") {
+
+        val userDataSource by inject<UserDataSource>()
+        val hashingService by inject<HashingService>()
+        val tokenConfig by inject<TokenConfig>()
+        val tokenService by inject<TokenService>()
+
         val request = call.runCatching {
             this.receiveNullable<AuthRequest>()
         }.getOrNull() ?: run {

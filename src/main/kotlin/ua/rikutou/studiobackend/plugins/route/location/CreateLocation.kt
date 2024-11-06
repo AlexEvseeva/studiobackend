@@ -6,6 +6,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.location.Location
 import ua.rikutou.studiobackend.data.location.LocationDataSource
@@ -13,13 +14,12 @@ import ua.rikutou.studiobackend.data.location.requests.LocationRequest
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
 import ua.rikutou.studiobackend.data.user.UserDataSource
 
-fun Route.createLocation(
-    locationDataSource: LocationDataSource,
-    studioDataSource: StudioDataSource,
-    userDataSource: UserDataSource
-) {
+fun Route.createLocation() {
     authenticate {
         post("location") {
+
+            val locationDataSource by inject<LocationDataSource>()
+
             val request = call.runCatching {
                 this.receiveNullable<LocationRequest>()
             }.getOrNull() ?: run {

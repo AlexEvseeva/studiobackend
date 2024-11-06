@@ -4,14 +4,14 @@ import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
 
-fun Route.getStudio(
-    studioDataSource: StudioDataSource
-) {
+fun Route.getStudio() {
     authenticate {
         get("studio") {
+            val studioDataSource by inject<StudioDataSource>()
             val studioId = call.parameters["studioId"]?.toInt() ?: run {
                 call.respond(
                     status = HttpStatusCode.BadRequest,

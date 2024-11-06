@@ -4,16 +4,18 @@ import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.gallery.GalleryDataSource
 import ua.rikutou.studiobackend.data.location.LocationDataSource
 
-fun Route.getLocationById (
-    locationDataSource: LocationDataSource,
-    galleryDataSource: GalleryDataSource
-) {
+fun Route.getLocationById () {
     authenticate {
         get("locationById") {
+
+            val locationDataSource by inject<LocationDataSource>()
+            val galleryDataSource by inject<GalleryDataSource>()
+
             val locationId = call.parameters["locationId"]?.toInt() ?: run {
                 call.respond(
                     status = HttpStatusCode.BadRequest,

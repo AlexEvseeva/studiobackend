@@ -6,18 +6,20 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.studio.Studio
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
 import ua.rikutou.studiobackend.data.studio.requests.StudioRequest
 import ua.rikutou.studiobackend.data.user.UserDataSource
 
-fun Route.createUpdateStudio(
-    studioDataSource: StudioDataSource,
-    userDataSource: UserDataSource
-) {
+fun Route.createUpdateStudio() {
     authenticate {
         post("studio") {
+
+            val studioDataSource by inject<StudioDataSource>()
+            val userDataSource by inject<UserDataSource>()
+
             val request = call.runCatching {
                 this.receiveNullable<StudioRequest>()
             }.getOrNull() ?: run {

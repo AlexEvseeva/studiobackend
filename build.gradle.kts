@@ -3,6 +3,7 @@ val kotlin_version: String by project
 val logback_version: String by project
 val h2_version: String by project
 val postgres_version: String by project
+val koinVersion:String by project
 
 plugins {
     kotlin("jvm") version "2.0.20"
@@ -38,6 +39,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml")
     implementation("commons-codec:commons-codec:1.17.1")
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

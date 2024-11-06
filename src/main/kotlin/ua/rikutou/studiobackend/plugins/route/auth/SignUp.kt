@@ -4,17 +4,19 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.user.User
 import ua.rikutou.studiobackend.data.user.UserDataSource
 import ua.rikutou.studiobackend.data.user.requests.AuthRequest
 import ua.rikutou.studiobackend.security.hashing.HashingService
 
-fun Route.signUp(
-    hashingService: HashingService,
-    userDataSource: UserDataSource
-) {
+fun Route.signUp() {
     post("signup") {
+
+        val hashingService by inject<HashingService>()
+        val userDataSource by inject<UserDataSource>()
+
         val request = call.runCatching {
             this.receiveNullable<AuthRequest>()
         }.getOrNull() ?: run {
