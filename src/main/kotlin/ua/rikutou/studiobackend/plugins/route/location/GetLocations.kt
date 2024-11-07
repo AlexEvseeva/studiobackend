@@ -28,10 +28,12 @@ fun Route.getLocations() {
                 )
                 return@get
             }
+            val search = call.parameters["search"]
 
             val locations = locationDataSource
                 .getAllLocations(
-                    studioId = studioId
+                    studioId = studioId,
+                    search = search
                 )
             if (locations.isEmpty()) {
                 call.respond(status = HttpStatusCode.NotFound, message = Error(code = HttpStatusCode.NotFound.value, message = "Locations not found."))

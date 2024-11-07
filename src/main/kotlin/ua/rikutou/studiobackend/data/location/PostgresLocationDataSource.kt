@@ -13,6 +13,7 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         private const val getLocationById = "SELECT * FROM location WHERE locationId = ?"
         private const val updateLocationStudioId = "UPDATE location SET studioId = ? WHERE locationId = ?"
         private const val getAllLocations = "SELECT * FROM location WHERE studioId = ?"
+        private const val getLocationsFiltered = "SELECT * FROM location WHERE studioId = ? AND (name ILIKE ? OR address ILIKE ?)"
     }
 
     init {
@@ -90,9 +91,18 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         return@withContext
     }
 
-    override suspend fun getAllLocations(studioId: Int): List<Location> = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(getAllLocations)
+    override suspend fun getAllLocations(studioId: Int, search: String?): List<Location> = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(search?.let {
+            getLocationsFiltered
+        } ?: getAllLocations)
+
         statement.setInt(1, studioId)
+        search?.let {
+            val searchString = "%$search%"
+            statement.setString(2, searchString)
+            statement.setString(3, searchString)
+        }
+
         val result = statement.executeQuery()
         return@withContext mutableListOf<Location>().apply {
             while(result.next()) {
@@ -111,6 +121,5 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
                 )
             }
         }
-
     }
 }
