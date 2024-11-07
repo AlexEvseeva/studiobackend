@@ -11,7 +11,9 @@ import ua.rikutou.studiobackend.data.studio.StudioDataSource
 fun Route.getStudio() {
     authenticate {
         get("studio") {
-            val studioDataSource by inject<StudioDataSource>()
+
+            val studioDataSource by application.inject<StudioDataSource>()
+
             val studioId = call.parameters["studioId"]?.toInt() ?: run {
                 call.respond(
                     status = HttpStatusCode.BadRequest,

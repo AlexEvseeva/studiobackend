@@ -19,10 +19,10 @@ fun Route.signIn() {
 
     post("signin") {
 
-        val userDataSource by inject<UserDataSource>()
-        val hashingService by inject<HashingService>()
-        val tokenConfig by inject<TokenConfig>()
-        val tokenService by inject<TokenService>()
+        val userDataSource by application.inject<UserDataSource>()
+        val hashingService by application.inject<HashingService>()
+        val tokenConfig by application.inject<TokenConfig>()
+        val tokenService by application.inject<TokenService>()
 
         val request = call.runCatching {
             this.receiveNullable<AuthRequest>()

@@ -13,8 +13,8 @@ fun Route.getLocationById () {
     authenticate {
         get("locationById") {
 
-            val locationDataSource by inject<LocationDataSource>()
-            val galleryDataSource by inject<GalleryDataSource>()
+            val locationDataSource by application.inject<LocationDataSource>()
+            val galleryDataSource by application.inject<GalleryDataSource>()
 
             val locationId = call.parameters["locationId"]?.toInt() ?: run {
                 call.respond(

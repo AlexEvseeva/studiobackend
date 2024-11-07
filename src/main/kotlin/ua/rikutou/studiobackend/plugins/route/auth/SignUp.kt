@@ -14,8 +14,8 @@ import ua.rikutou.studiobackend.security.hashing.HashingService
 fun Route.signUp() {
     post("signup") {
 
-        val hashingService by inject<HashingService>()
-        val userDataSource by inject<UserDataSource>()
+        val hashingService by application.inject<HashingService>()
+        val userDataSource by application.inject<UserDataSource>()
 
         val request = call.runCatching {
             this.receiveNullable<AuthRequest>()

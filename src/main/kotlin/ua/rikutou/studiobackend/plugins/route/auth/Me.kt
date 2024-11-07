@@ -13,7 +13,7 @@ fun Route.me() {
     authenticate {
         get("me") {
 
-            val userDataSource by inject<UserDataSource>()
+            val userDataSource by application.inject<UserDataSource>()
 
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)?.toInt() ?: -1

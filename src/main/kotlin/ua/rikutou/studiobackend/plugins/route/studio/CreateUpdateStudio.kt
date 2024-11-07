@@ -17,8 +17,8 @@ fun Route.createUpdateStudio() {
     authenticate {
         post("studio") {
 
-            val studioDataSource by inject<StudioDataSource>()
-            val userDataSource by inject<UserDataSource>()
+            val studioDataSource by application.inject<StudioDataSource>()
+            val userDataSource by application.inject<UserDataSource>()
 
             val request = call.runCatching {
                 this.receiveNullable<StudioRequest>()

@@ -15,8 +15,8 @@ fun Route.getLocations() {
     authenticate {
         get("locations") {
 
-            val locationDataSource by inject<LocationDataSource>()
-            val galleryDataSource by inject<GalleryDataSource>()
+            val locationDataSource by application.inject<LocationDataSource>()
+            val galleryDataSource by application.inject<GalleryDataSource>()
 
             val studioId = call.parameters["studioId"]?.toInt() ?: run {
                 call.respond(

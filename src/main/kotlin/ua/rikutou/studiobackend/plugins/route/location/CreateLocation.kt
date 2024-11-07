@@ -18,7 +18,7 @@ fun Route.createLocation() {
     authenticate {
         post("location") {
 
-            val locationDataSource by inject<LocationDataSource>()
+            val locationDataSource by application.inject<LocationDataSource>()
 
             val request = call.runCatching {
                 this.receiveNullable<LocationRequest>()
