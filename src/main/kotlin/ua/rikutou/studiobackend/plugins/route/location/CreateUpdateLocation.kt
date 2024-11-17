@@ -2,7 +2,6 @@ package ua.rikutou.studiobackend.plugins.route.location
 
 import io.ktor.http.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -11,12 +10,10 @@ import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.location.Location
 import ua.rikutou.studiobackend.data.location.LocationDataSource
 import ua.rikutou.studiobackend.data.location.requests.LocationRequest
-import ua.rikutou.studiobackend.data.studio.StudioDataSource
-import ua.rikutou.studiobackend.data.user.UserDataSource
 
-fun Route.createLocation() {
+fun Route.createUpdateLocation() {
     authenticate {
-        post("location") {
+        post("locations") {
 
             val locationDataSource by application.inject<LocationDataSource>()
 
@@ -34,6 +31,7 @@ fun Route.createLocation() {
             }
 
             val location = Location(
+                locationId = request.locationId,
                 name = request.name,
                 address = request.address,
                 width = request.width,
@@ -43,9 +41,14 @@ fun Route.createLocation() {
                 studioId = request.studioId,
                 rentPrice = request.rentPrice,
             )
-            val locationId = locationDataSource.insertLocation(location)
+            if (location.locationId != null) {
+                locationDataSource.updateLocation(location = location)
+                call.respond(HttpStatusCode.OK, message = location)
+            } else {
+                val locationId = locationDataSource.insertLocation(location)
+                call.respond(HttpStatusCode.OK, location.copy(locationId = locationId))
+            }
 
-            call.respond(HttpStatusCode.OK, location.copy(locationId = locationId))
         }
     }
 }

@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class LocationRequest(
+    val locationId: Int? = null,
     val name: String,
     val address: String,
     val width: Float,

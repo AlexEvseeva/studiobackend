@@ -14,6 +14,8 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         private const val updateLocationStudioId = "UPDATE location SET studioId = ? WHERE locationId = ?"
         private const val getAllLocations = "SELECT * FROM location WHERE studioId = ?"
         private const val getLocationsFiltered = "SELECT * FROM location WHERE studioId = ? AND (name ILIKE ? OR address ILIKE ?)"
+        private const val updateLocation = "UPDATE location SET name = ?, address = ?, width = ?, length = ?, height = ?, type = ?,rentPrice = ? WHERE locationId = ?"
+        private const val deleteLocation = "DELETE FROM location WHERE locationId = ?"
     }
 
     init {
@@ -82,13 +84,29 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         } else null
     }
 
-    override suspend fun updateLocation(locationId: Int, studioId: Int) = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(updateLocationStudioId)
-        statement.apply {
-            setInt(1, studioId)
-            setInt(2, locationId)
-        }.executeUpdate()
-        return@withContext
+    override suspend fun updateLocation(locationId: Int?, studioId: Int?, location: Location?) = withContext(Dispatchers.IO) {
+        if (locationId != null && studioId != null) {
+            val statement = connection.prepareStatement(updateLocationStudioId)
+            statement.apply {
+                setInt(1, studioId)
+                setInt(2, locationId)
+            }.executeUpdate()
+            return@withContext
+
+        } else if (location != null) {
+            val statement = connection.prepareStatement(updateLocation)
+            statement.apply {
+                setString(1, location.name)
+                setString(2, location.address)
+                setFloat(3, location.width)
+                setFloat(4, location.length)
+                setFloat(5, location.height)
+                setString(6, location.type)
+                setFloat(8, location.rentPrice)
+                setInt(7, location.locationId ?: -1)
+            }.executeUpdate()
+            return@withContext
+        }
     }
 
     override suspend fun getAllLocations(studioId: Int, search: String?): List<Location> = withContext(Dispatchers.IO) {
@@ -121,5 +139,11 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
                 )
             }
         }
+    }
+
+    override suspend fun deleteById(locationId: Int): Unit = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(deleteLocation)
+        statement.setInt(1, locationId)
+        statement.execute()
     }
 }
