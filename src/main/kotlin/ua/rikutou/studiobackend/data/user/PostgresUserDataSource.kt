@@ -11,7 +11,7 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
         private const val createTableUsers = "CREATE TABLE IF NOT EXISTS users (userId SERIAL PRIMARY KEY, name VARCHAR(200), password VARCHAR(200), salt VARCHAR(200), studioId int)"
         private const val getUserByUserName = "SELECT * FROM users WHERE name = ?"
         private const val getUserByUserId = "SELECT * FROM users WHERE userId = ?"
-        private const val insertUser = "INSERT INTO users (name, password, salt) VALUES (?, ?, ?)"
+        private const val insertUser = "INSERT INTO users (name, password, salt, studioId) VALUES (?, ?, ?, ?)"
         private const val updateUserStudioId = "UPDATE users SET studioId = ? WHERE userId = ?"
     }
 
@@ -44,6 +44,7 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
 
 
         return@withContext if(result.next()) {
+            println("studioId: ${ result.getInt("studioId")}")
             User(
                 userId = result.getInt("userId"),
                 name = result.getString("name"),
@@ -65,6 +66,7 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
             setString(1, user.name)
             setString(2, user.password)
             setString(3, user.salt)
+            setInt(4, -1)
         }.executeUpdate()
 
         return@withContext statement.generatedKeys.next()

@@ -37,7 +37,7 @@ fun Route.signIn() {
             return@post
         }
 
-        val user = userDataSource.getUserByUserName(name = request.name) ?: run {
+        val user = userDataSource.getUserByUserName(name = request.name.lowercase()) ?: run {
             call.respond(
                 status = HttpStatusCode.NotFound,
                 message = Error(
@@ -84,7 +84,7 @@ fun Route.signIn() {
             message = AuthResponse(
                 token = token,
                 userId = user.userId,
-                userName = user.name,
+                userName = user.name.lowercase(),
                 studioId = user.studioId
             )
         )

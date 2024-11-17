@@ -48,7 +48,7 @@ fun Route.signUp() {
 
         if(!userDataSource.insertUser(
             User(
-                name = request.name,
+                name = request.name.lowercase(),
                 password = saltedHash.hash,
                 salt = saltedHash.salt
             )
