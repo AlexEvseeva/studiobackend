@@ -4,6 +4,8 @@ import io.ktor.server.config.*
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import ua.rikutou.studiobackend.data.department.DepartmentDataSource
+import ua.rikutou.studiobackend.data.department.PostgresDepartmentDataSource
 import ua.rikutou.studiobackend.data.user.PostgresUserDataSource
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
@@ -35,6 +37,7 @@ fun appModule(
     singleOf(::PostgresStudioDataSource) { bind<StudioDataSource>()}
     singleOf(::PostgresLocationDataSource) { bind<LocationDataSource>()}
     singleOf(::PostgresGalleryDataSource) { bind<GalleryDataSource>() }
+    singleOf(::PostgresDepartmentDataSource) { bind<DepartmentDataSource>()}
 
     single<TokenConfig> {
         TokenConfig(
