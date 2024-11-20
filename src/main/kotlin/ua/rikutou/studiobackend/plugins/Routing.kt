@@ -10,6 +10,10 @@ import ua.rikutou.studiobackend.plugins.route.department.createUpdateDepartment
 import ua.rikutou.studiobackend.plugins.route.department.deleteDepartment
 import ua.rikutou.studiobackend.plugins.route.department.getAllDepartments
 import ua.rikutou.studiobackend.plugins.route.department.getDepartmentById
+import ua.rikutou.studiobackend.plugins.route.equipment.createUpdateEquipment
+import ua.rikutou.studiobackend.plugins.route.equipment.deleteEquipment
+import ua.rikutou.studiobackend.plugins.route.equipment.getAllEquipment
+import ua.rikutou.studiobackend.plugins.route.equipment.getEquipmentById
 import ua.rikutou.studiobackend.plugins.route.location.createUpdateLocation
 import ua.rikutou.studiobackend.plugins.route.location.deleteLocation
 import ua.rikutou.studiobackend.plugins.route.location.getLocationById
@@ -35,6 +39,11 @@ fun Application.configureRouting() {
         createUpdateLocation()
         getLocations()
         deleteLocation()
+
+        createUpdateEquipment()
+        getAllEquipment()
+        getEquipmentById()
+        deleteEquipment()
 
         createUpdateDepartment()
         deleteDepartment()

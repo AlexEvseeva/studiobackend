@@ -94,7 +94,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                         type = result.getString(type),
                         workHours = result.getString(workHours),
                         contactPerson = result.getString(contactPerson),
-                        studioId = result.getInt(Companion.studioId)
+                        studioId = result.getInt( studioId)
                     )
                 )
             }
@@ -103,7 +103,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
 
     override suspend fun getDepartmentByType(type: String): Department? = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(getDepartmentByType)
-        statement.setString(1, type)
+        statement.setString(1, "%$type%")
         val result = statement.executeQuery()
 
         return@withContext if (result.next()) {

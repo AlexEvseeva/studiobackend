@@ -18,7 +18,7 @@ fun Route.deleteDepartment() {
                     status = HttpStatusCode.BadRequest,
                     message = Error(
                         code = HttpStatusCode.BadRequest.value,
-                        message = "Department ID not found"
+                        message = "Department Id not found"
                     )
                 )
                 return@delete
