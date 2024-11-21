@@ -18,6 +18,10 @@ import ua.rikutou.studiobackend.plugins.route.location.createUpdateLocation
 import ua.rikutou.studiobackend.plugins.route.location.deleteLocation
 import ua.rikutou.studiobackend.plugins.route.location.getLocationById
 import ua.rikutou.studiobackend.plugins.route.location.getLocations
+import ua.rikutou.studiobackend.plugins.route.section.createUpdateSection
+import ua.rikutou.studiobackend.plugins.route.section.deleteSection
+import ua.rikutou.studiobackend.plugins.route.section.getAllSections
+import ua.rikutou.studiobackend.plugins.route.section.getSectionById
 import ua.rikutou.studiobackend.plugins.route.studio.createUpdateStudio
 import ua.rikutou.studiobackend.plugins.route.studio.getStudio
 import java.io.File
@@ -49,5 +53,10 @@ fun Application.configureRouting() {
         deleteDepartment()
         getAllDepartments()
         getDepartmentById()
+
+        createUpdateSection()
+        getSectionById()
+        getAllSections()
+        deleteSection()
     }
 }

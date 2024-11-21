@@ -6,14 +6,18 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import ua.rikutou.studiobackend.data.department.DepartmentDataSource
 import ua.rikutou.studiobackend.data.department.PostgresDepartmentDataSource
+import ua.rikutou.studiobackend.data.equipment.EquipmentDataSource
 import ua.rikutou.studiobackend.data.user.PostgresUserDataSource
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
 import ua.rikutou.studiobackend.data.user.UserDataSource
+import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource
 import ua.rikutou.studiobackend.data.location.LocationDataSource
 import ua.rikutou.studiobackend.data.location.PostgresLocationDataSource
+import ua.rikutou.studiobackend.data.equipment.PostgresEquipmentDataSource
 import ua.rikutou.studiobackend.data.gallery.GalleryDataSource
 import ua.rikutou.studiobackend.data.gallery.PostgresGalleryDataSource
+import ua.rikutou.studiobackend.data.section.SectionDataSource
 import ua.rikutou.studiobackend.security.token.TokenConfig
 import ua.rikutou.studiobackend.security.token.TokenService
 import ua.rikutou.studiobackend.security.token.JwtTokenService
@@ -38,6 +42,8 @@ fun appModule(
     singleOf(::PostgresLocationDataSource) { bind<LocationDataSource>()}
     singleOf(::PostgresGalleryDataSource) { bind<GalleryDataSource>() }
     singleOf(::PostgresDepartmentDataSource) { bind<DepartmentDataSource>()}
+    singleOf(::PostgresEquipmentDataSource) {bind<EquipmentDataSource>()}
+    singleOf(::PostgresSectionDataSource) {bind <SectionDataSource>()}
 
     single<TokenConfig> {
         TokenConfig(
