@@ -2,6 +2,7 @@ package ua.rikutou.studiobackend.data.user
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.rikutou.studiobackend.data.user.responses.StudioUser
 import java.sql.Connection
 import java.sql.Statement
 
@@ -13,6 +14,7 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
         private const val getUserByUserId = "SELECT * FROM users WHERE userId = ?"
         private const val insertUser = "INSERT INTO users (name, password, salt, studioId) VALUES (?, ?, ?, ?)"
         private const val updateUserStudioId = "UPDATE users SET studioId = ? WHERE userId = ?"
+        private const val getUsersWithStudioIdAndCandidates = "SELECT * FROM users WHERE studioId = ? OR studioId < 0"
     }
 
     init {
@@ -79,6 +81,25 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
             setInt(2, userId)
         }.executeUpdate()
         return@withContext
+    }
+
+    override suspend fun getStudioUsersAndCandidates(studioId: Int): List<StudioUser> = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(getUsersWithStudioIdAndCandidates)
+        statement.setInt(1, studioId)
+        val result = statement.executeQuery()
+
+        return@withContext mutableListOf<StudioUser>().apply {
+            while (result.next()) {
+                add(
+                    StudioUser(
+                        userId = result.getInt("userId"),
+                        userName = result.getString("name"),
+                        studioId = result.getInt("studioId")
+                    )
+                )
+            }
+        }
+
     }
 
 }
