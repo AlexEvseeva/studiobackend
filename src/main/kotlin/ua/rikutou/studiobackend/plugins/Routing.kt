@@ -24,7 +24,9 @@ import ua.rikutou.studiobackend.plugins.route.section.getAllSections
 import ua.rikutou.studiobackend.plugins.route.section.getSectionById
 import ua.rikutou.studiobackend.plugins.route.studio.createUpdateStudio
 import ua.rikutou.studiobackend.plugins.route.studio.getStudio
+import ua.rikutou.studiobackend.plugins.route.user.deleteUser
 import ua.rikutou.studiobackend.plugins.route.user.getUsersByStudioIdAndCandidates
+import ua.rikutou.studiobackend.plugins.route.user.updateUserStudio
 import java.io.File
 
 fun Application.configureRouting() {
@@ -61,5 +63,7 @@ fun Application.configureRouting() {
         deleteSection()
 
         getUsersByStudioIdAndCandidates()
+        deleteUser()
+        updateUserStudio()
     }
 }

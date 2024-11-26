@@ -15,6 +15,7 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
         private const val insertUser = "INSERT INTO users (name, password, salt, studioId) VALUES (?, ?, ?, ?)"
         private const val updateUserStudioId = "UPDATE users SET studioId = ? WHERE userId = ?"
         private const val getUsersWithStudioIdAndCandidates = "SELECT * FROM users WHERE studioId = ? OR studioId < 0"
+        private const val deleteUser = "DELETE FROM users WHERE userId = ?"
     }
 
     init {
@@ -74,13 +75,14 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
         return@withContext statement.generatedKeys.next()
     }
 
-    override suspend fun updateUser(userId: Int, studioId: Int) = withContext(Dispatchers.IO) {
+    override suspend fun updateUser(userId: Int, studioId: Int): Boolean = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(updateUserStudioId)
-        statement.apply {
+        val result = statement.apply {
             setInt(1, studioId)
             setInt(2, userId)
         }.executeUpdate()
-        return@withContext
+
+        return@withContext result > 0
     }
 
     override suspend fun getStudioUsersAndCandidates(studioId: Int): List<StudioUser> = withContext(Dispatchers.IO) {
@@ -100,6 +102,12 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
             }
         }
 
+    }
+
+    override suspend fun deleteUserById(userId: Int): Unit = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(deleteUser)
+        statement.setInt(1, userId)
+        statement.execute()
     }
 
 }

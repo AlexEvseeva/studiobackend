@@ -6,6 +6,7 @@ interface UserDataSource {
     suspend fun getUserById(userId: Int): User?
     suspend fun getUserByUserName(name: String): User?
     suspend fun insertUser(user: User): Boolean
-    suspend fun updateUser(userId: Int, studioId: Int)
+    suspend fun updateUser(userId: Int, studioId: Int): Boolean
     suspend fun getStudioUsersAndCandidates(studioId: Int): List<StudioUser>
+    suspend fun deleteUserById(userId: Int)
 }
