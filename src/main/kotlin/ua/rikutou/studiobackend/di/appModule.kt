@@ -18,6 +18,8 @@ import ua.rikutou.studiobackend.data.equipment.PostgresEquipmentDataSource
 import ua.rikutou.studiobackend.data.gallery.GalleryDataSource
 import ua.rikutou.studiobackend.data.gallery.PostgresGalleryDataSource
 import ua.rikutou.studiobackend.data.section.SectionDataSource
+import ua.rikutou.studiobackend.data.execute.ExecuteDataSource
+import ua.rikutou.studiobackend.data.execute.PostgresExecuteDataSource
 import ua.rikutou.studiobackend.security.token.TokenConfig
 import ua.rikutou.studiobackend.security.token.TokenService
 import ua.rikutou.studiobackend.security.token.JwtTokenService
@@ -37,13 +39,14 @@ fun appModule(
             System.getenv("PG_PASSWORD")
         )
     }
-    singleOf(::PostgresUserDataSource) { bind<UserDataSource>()}
-    singleOf(::PostgresStudioDataSource) { bind<StudioDataSource>()}
-    singleOf(::PostgresLocationDataSource) { bind<LocationDataSource>()}
+    singleOf(::PostgresUserDataSource) { bind<UserDataSource>() }
+    singleOf(::PostgresStudioDataSource) { bind<StudioDataSource>() }
+    singleOf(::PostgresLocationDataSource) { bind<LocationDataSource>() }
     singleOf(::PostgresGalleryDataSource) { bind<GalleryDataSource>() }
-    singleOf(::PostgresDepartmentDataSource) { bind<DepartmentDataSource>()}
-    singleOf(::PostgresEquipmentDataSource) {bind<EquipmentDataSource>()}
-    singleOf(::PostgresSectionDataSource) {bind <SectionDataSource>()}
+    singleOf(::PostgresDepartmentDataSource) { bind<DepartmentDataSource>() }
+    singleOf(::PostgresEquipmentDataSource) { bind<EquipmentDataSource>() }
+    singleOf(::PostgresSectionDataSource) { bind <SectionDataSource>() }
+    singleOf(::PostgresExecuteDataSource) { bind<ExecuteDataSource>() }
 
     single<TokenConfig> {
         TokenConfig(

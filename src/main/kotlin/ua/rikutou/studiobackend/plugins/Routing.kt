@@ -14,6 +14,7 @@ import ua.rikutou.studiobackend.plugins.route.equipment.createUpdateEquipment
 import ua.rikutou.studiobackend.plugins.route.equipment.deleteEquipment
 import ua.rikutou.studiobackend.plugins.route.equipment.getAllEquipment
 import ua.rikutou.studiobackend.plugins.route.equipment.getEquipmentById
+import ua.rikutou.studiobackend.plugins.route.execute.executeQuery
 import ua.rikutou.studiobackend.plugins.route.location.createUpdateLocation
 import ua.rikutou.studiobackend.plugins.route.location.deleteLocation
 import ua.rikutou.studiobackend.plugins.route.location.getLocationById
@@ -65,5 +66,7 @@ fun Application.configureRouting() {
         getUsersByStudioIdAndCandidates()
         deleteUser()
         updateUserStudio()
+
+        executeQuery()
     }
 }
