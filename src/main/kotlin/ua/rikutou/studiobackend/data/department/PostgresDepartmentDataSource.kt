@@ -19,7 +19,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         private const val insertDepartment = "INSERT INTO $table ($type, $workHours, $contactPerson, $studioId) VALUES (?, ?, ?, ?)"
         private const val updateDepartment = "UPDATE $table SET $type = ?, $workHours = ?, $contactPerson = ?, $studioId = ? WHERE $departmentId = ?"
         private const val deleteDepartment = "DELETE FROM $table WHERE $departmentId = ?"
-        private  const val getDepartmentById = "SELECT * FROM $table WHERE $departmentId = ?"
+        private const val getDepartmentById = "SELECT * FROM $table WHERE $departmentId = ?"
         private const val getDepartmentByType = "SELECT * FROM $table WHERE $type ILIKE ? LIMIT 1"
         private const val getAllDepartments = "SELECT * FROM $table WHERE $studioId = ?"
         private const val getDepartmentsFiltered = "SELECT * FROM $table WHERE $studioId = ? AND $type ILIKE ?"
