@@ -2,8 +2,11 @@ package ua.rikutou.studiobackend.data.department
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource.Companion.sectionId
+import ua.rikutou.studiobackend.data.section.Section
 import java.sql.Connection
 import java.sql.Statement
+import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource as section
 
 class PostgresDepartmentDataSource(private val connection: Connection) : DepartmentDataSource {
     companion object {
@@ -21,14 +24,34 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         private const val deleteDepartment = "DELETE FROM $table WHERE $departmentId = ?"
         private const val getDepartmentById = "SELECT * FROM $table WHERE $departmentId = ?"
         private const val getDepartmentByType = "SELECT * FROM $table WHERE $type ILIKE ? LIMIT 1"
-        private const val getAllDepartments = "SELECT * FROM $table WHERE $studioId = ?"
-        private const val getDepartmentsFiltered = "SELECT * FROM $table WHERE $studioId = ? AND $type ILIKE ?"
+        private const val getAllDepartmentsWithSections = """
+            SELECT 
+            d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId, 
+            s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} AS deptId
+            FROM ${table} d
+            LEFT JOIN ${section.table} s 
+            ON d.${departmentId} = s.${section.departmentId} 
+            WHERE d.studioid = ?
+        """
+
+        private const val getAllDepartmentsWithSectionsFiltered = """
+            SELECT 
+            d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId, 
+            s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} AS deptId
+            FROM ${table} d
+            LEFT JOIN ${section.table} s 
+            ON d.${departmentId} = s.${section.departmentId} 
+            WHERE d.studioid = ? AND $type ILIKE ?
+        """
     }
 
     init {
         connection
             .createStatement()
             .executeUpdate(createTableDepart)
+        connection
+            .createStatement()
+            .executeUpdate(section.createTableSection)
     }
 
     override suspend fun insertUpdateDepartment(department: Department): Int? = withContext(Dispatchers.IO) {
@@ -77,28 +100,55 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
     }
 
     override suspend fun getAllDepartments(studioId: Int, search: String?): List<Department> = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(search?.let {
-            getDepartmentsFiltered
-        } ?: getAllDepartments)
+        val statement = connection.prepareStatement(
+            search?.let {
+                getAllDepartmentsWithSectionsFiltered
+            } ?: getAllDepartmentsWithSections
+        )
         statement.setInt(1, studioId)
         search?.let {
             statement.setString(2, "%$it%")
         }
-
         val result = statement.executeQuery()
-        return@withContext mutableListOf<Department>().apply {
+
+        return@withContext mutableMapOf<Department, List<Section>>().apply {
             while (result.next()) {
-                add(
-                    Department(
-                        departmentId = result.getInt(departmentId),
-                        type = result.getString(type),
-                        workHours = result.getString(workHours),
-                        contactPerson = result.getString(contactPerson),
-                        studioId = result.getInt(PostgresDepartmentDataSource.studioId)
-                    )
+                val dept = Department(
+                    departmentId = result.getInt(departmentId),
+                    type = result.getString(type),
+                    workHours = result.getString(workHours),
+                    contactPerson = result.getString(contactPerson),
+                    studioId = result.getInt(studioId),
                 )
+                val section = if(result.getInt(section.sectionId) != 0 ) {
+                    Section(
+                        sectionId = result.getInt(sectionId),
+                        title = result.getString(section.title),
+                        address = result.getString(section.address),
+                        internalPhoneNumber = result.getString(section.internalPhoneNumber),
+                        departmentId = result.getInt("deptId"),
+                    )
+                } else null
+
+                val list: List<Section> = this[dept] ?: emptyList()
+
+                when {
+                    section != null && !this.containsKey(dept) -> {
+                        this[dept] = listOf(section)
+                    }
+                    section != null && this.containsKey(dept) && this[dept]?.isNotEmpty() == true -> {
+                        this[dept] = mutableListOf<Section>().apply {
+                            addAll(list)
+                            add(section)
+                        }
+                    }
+                    else -> {
+                        this[dept] = list
+                    }
+                }
+
             }
-        }
+        }.map { it.key.copy(sections = it.value) }
     }
 
     override suspend fun getDepartmentByType(type: String): Department? = withContext(Dispatchers.IO) {
