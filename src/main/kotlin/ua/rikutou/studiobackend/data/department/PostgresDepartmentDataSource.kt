@@ -47,7 +47,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             connection.prepareStatement(insertDepartment, Statement.RETURN_GENERATED_KEYS).apply {
                 setString(1, department.type)
                 setString(2, department.workHours)
-                setString(3, department.workHours)
+                setString(3, department.contactPerson)
                 setInt(4, department.studioId)
             }
         }
@@ -94,7 +94,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                         type = result.getString(type),
                         workHours = result.getString(workHours),
                         contactPerson = result.getString(contactPerson),
-                        studioId = result.getInt( studioId)
+                        studioId = result.getInt(PostgresDepartmentDataSource.studioId)
                     )
                 )
             }
