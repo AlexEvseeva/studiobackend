@@ -118,7 +118,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                     type = result.getString(type),
                     workHours = result.getString(workHours),
                     contactPerson = result.getString(contactPerson),
-                    studioId = result.getInt(studioId),
+                    studioId = result.getInt(PostgresDepartmentDataSource.studioId),
                 )
                 val section = if(result.getInt(section.sectionId) != 0 ) {
                     Section(
