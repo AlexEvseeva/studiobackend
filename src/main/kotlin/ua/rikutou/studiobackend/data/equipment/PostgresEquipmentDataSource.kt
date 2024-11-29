@@ -112,7 +112,7 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
                         type = result.getString(type),
                         comment = result.getString(comment),
                         rentPrice = result.getFloat(rentPrice),
-                        studioId = result.getInt(studioId),
+                        studioId = result.getInt(PostgresEquipmentDataSource.sId),
                     )
                 )
             }
