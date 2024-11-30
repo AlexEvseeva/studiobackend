@@ -2,6 +2,7 @@ package ua.rikutou.studiobackend.data.equipment
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import java.sql.Connection
 import java.sql.Statement
 
@@ -15,7 +16,19 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
         private const val rentPrice = "rentPrice"
         private const val sId = "studioId"
 
-        private const val createTableEquipment = "CREATE TABLE IF NOT EXISTS $table ($eId SERIAL PRIMARY KEY, $name VARCHAR(100), $type VARCHAR(100), $comment VARCHAR(300), $rentPrice FLOAT, $sId INTEGER NOT NULL)"
+        private const val createTableEquipment =
+            """
+                CREATE TABLE IF NOT EXISTS $table (
+                    $eId SERIAL PRIMARY KEY,
+                    $name VARCHAR(100),
+                    $type VARCHAR(100),
+                    $comment VARCHAR(300),
+                    $rentPrice FLOAT,
+                    $sId INTEGER
+                        REFERENCES ${PostgresStudioDataSource.table} (${PostgresStudioDataSource.studioId})
+                        ON DELETE CASCADE
+                )
+            """
         private const val insertEquipment = "INSERT INTO $table ($name, $type, $comment, $rentPrice, $sId) VALUES (?, ?, ?, ?, ?)"
         private const val updateEquipment = "UPDATE $table SET $sId = ?, $name = ?, $type = ?, $comment = ?, $rentPrice = ? WHERE $eId = ?"
         private const val delterEquipment = "DELETE FROM $table WHERE $eId = ?"

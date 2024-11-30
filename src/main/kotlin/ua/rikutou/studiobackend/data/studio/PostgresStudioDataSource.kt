@@ -7,11 +7,13 @@ import java.sql.Statement
 
 class PostgresStudioDataSource(private val connection: Connection) : StudioDataSource {
     companion object {
-        private const val createTableStudio = "CREATE TABLE IF NOT EXISTS studio (studioId SERIAL PRIMARY KEY, name VARCHAR(70), address VARCHAR(200), postIndex CHAR(5), site VARCHAR(100), youtube VARCHAR(100), facebook VARCHAR(100))"
-        private const val insertStudio = "INSERT INTO studio (name, address, postIndex, site, youtube, facebook) VALUES (?, ?, ?, ?, ?, ?)"
-        private const val getStudioById = "SELECT * FROM studio WHERE studioId = ? LIMIT 1"
-        private const val getStudioByName = "SELECT * FROM studio WHERE name = ?"
-        private const val updateStudio = "UPDATE studio SET name = ?, address = ?, postIndex = ?, site = ?, youtube = ?, facebook = ? WHERE studioId = ?"
+        const val table = "studio"
+        const val studioId = "studioId"
+        const val createTableStudio = "CREATE TABLE IF NOT EXISTS studio (studioId SERIAL PRIMARY KEY, name VARCHAR(70), address VARCHAR(200), postIndex CHAR(5), site VARCHAR(100), youtube VARCHAR(100), facebook VARCHAR(100))"
+        const val insertStudio = "INSERT INTO studio (name, address, postIndex, site, youtube, facebook) VALUES (?, ?, ?, ?, ?, ?)"
+        const val getStudioById = "SELECT * FROM studio WHERE studioId = ? LIMIT 1"
+        const val getStudioByName = "SELECT * FROM studio WHERE name = ?"
+        const val updateStudio = "UPDATE studio SET name = ?, address = ?, postIndex = ?, site = ?, youtube = ?, facebook = ? WHERE studioId = ?"
     }
 
     init {

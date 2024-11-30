@@ -2,12 +2,28 @@ package ua.rikutou.studiobackend.data.location
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import java.sql.Connection
 import java.sql.Statement
 
 class PostgresLocationDataSource(private val connection: Connection) : LocationDataSource {
     companion object {
-        private const val createTableLocation = "CREATE TABLE IF NOT EXISTS location (locationId SERIAL PRIMARY KEY, name VARCHAR(100), address VARCHAR(200), width FLOAT, length FLOAT, height FLOAT, type VARCHAR(50), studioId INT NOT NULL, rentPrice FLOAT)"
+        private const val createTableLocation =
+            """
+                CREATE TABLE IF NOT EXISTS location (
+                    locationId SERIAL PRIMARY KEY,
+                    name VARCHAR(100), 
+                    address VARCHAR(200),
+                    width FLOAT,
+                    length FLOAT,
+                    height FLOAT,
+                    type VARCHAR(50),
+                    studioId INTEGER 
+                        REFERENCES ${PostgresStudioDataSource.table} (${PostgresStudioDataSource.studioId}) 
+                            ON DELETE CASCADE,
+                    rentPrice FLOAT
+                )
+            """
         private const val insertLocation = "INSERT INTO location (name, address, width, length, height, type, studioId,rentPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         private const val getLocationByName = "SELECT * FROM location WHERE name = ?"
         private const val getLocationById = "SELECT * FROM location WHERE locationId = ?"

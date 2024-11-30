@@ -10,12 +10,12 @@ import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource as sectio
 
 class PostgresDepartmentDataSource(private val connection: Connection) : DepartmentDataSource {
     companion object {
-        private const val table = "department"
-        private const val departmentId = "departmentId"
-        private const val type = "type"
-        private const val workHours = "workHours"
-        private const val contactPerson = "contactPerson"
-        private const val studioId = "studioId"
+        const val table = "department"
+        const val departmentId = "departmentId"
+        const val type = "type"
+        const val workHours = "workHours"
+        const val contactPerson = "contactPerson"
+        const val studioId = "studioId"
 
 
         private const val createTableDepart = "CREATE TABLE IF NOT EXISTS $table ($departmentId SERIAL PRIMARY KEY, $type VARCHAR(100), $workHours VARCHAR(100), $contactPerson VARCHAR(200), $studioId INTEGER)"
