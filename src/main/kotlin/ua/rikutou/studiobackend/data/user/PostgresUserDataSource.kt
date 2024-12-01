@@ -101,7 +101,6 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
                 )
             }
         }
-
     }
 
     override suspend fun deleteUserById(userId: Int): Unit = withContext(Dispatchers.IO) {

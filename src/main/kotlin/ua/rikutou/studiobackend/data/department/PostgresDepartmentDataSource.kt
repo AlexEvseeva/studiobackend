@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource.Companion.sectionId
 import ua.rikutou.studiobackend.data.section.Section
+import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import java.sql.Connection
 import java.sql.Statement
 import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource as section
@@ -18,7 +19,18 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         const val studioId = "studioId"
 
 
-        private const val createTableDepart = "CREATE TABLE IF NOT EXISTS $table ($departmentId SERIAL PRIMARY KEY, $type VARCHAR(100), $workHours VARCHAR(100), $contactPerson VARCHAR(200), $studioId INTEGER)"
+        private const val createTableDepart =
+            """
+                CREATE TABLE IF NOT EXISTS $table (
+                    $departmentId SERIAL PRIMARY KEY,
+                    $type VARCHAR(100),
+                    $workHours VARCHAR(100),
+                    $contactPerson VARCHAR(200),
+                    $studioId INTEGER 
+                        REFERENCES ${PostgresStudioDataSource.table} (${PostgresStudioDataSource.studioId}) 
+                        ON DELETE CASCADE
+                )
+            """
         private const val insertDepartment = "INSERT INTO $table ($type, $workHours, $contactPerson, $studioId) VALUES (?, ?, ?, ?)"
         private const val updateDepartment = "UPDATE $table SET $type = ?, $workHours = ?, $contactPerson = ?, $studioId = ? WHERE $departmentId = ?"
         private const val deleteDepartment = "DELETE FROM $table WHERE $departmentId = ?"
