@@ -5,9 +5,11 @@ import kotlinx.coroutines.withContext
 import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource.Companion.sectionId
 import ua.rikutou.studiobackend.data.section.Section
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
+import ua.rikutou.studiobackend.data.transport.Transport
 import java.sql.Connection
 import java.sql.Statement
 import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource as section
+import ua.rikutou.studiobackend.data.transport.PostgresTransportDataSource as transport
 
 class PostgresDepartmentDataSource(private val connection: Connection) : DepartmentDataSource {
     companion object {
@@ -36,23 +38,37 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         private const val deleteDepartment = "DELETE FROM $table WHERE $departmentId = ?"
         private const val getDepartmentById = "SELECT * FROM $table WHERE $departmentId = ?"
         private const val getDepartmentByType = "SELECT * FROM $table WHERE $type ILIKE ? LIMIT 1"
-        private const val getAllDepartmentsWithSections = """
+//        private const val getAllDepartments = """
+//            SELECT
+//            d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId,
+//            s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} AS deptId
+//            t.${transport.transportId}, t.${transport.type}, t.${transport.mark}, t.${transport.manufactureDate}, t.${transport.seats}, t.${transport.departmentId} AS tDeptId, t.${transport.color}, t.${transport.technicalState}
+//            FROM ${table} d
+//            LEFT JOIN ${section.table} s
+//            ON d.${departmentId} = s.${section.departmentId}
+//            LEFT JOIN ${transport.table} t
+//            ON d.${departmentId} = t.${transport.departmentId}
+//            WHERE d.studioid = ?
+//        """
+        private const val getAllDepartments = """
             SELECT 
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId, 
-            s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} AS deptId
+            t.${transport.transportId}, t.${transport.type} as transportType, t.${transport.mark}, t.${transport.manufactureDate}, t.${transport.seats}, t.${transport.departmentId} AS tDeptId, t.${transport.color}, t.${transport.technicalState}
             FROM ${table} d
-            LEFT JOIN ${section.table} s 
-            ON d.${departmentId} = s.${section.departmentId} 
+            LEFT JOIN ${transport.table} t
+            ON d.${departmentId} = t.${transport.departmentId}
             WHERE d.studioid = ?
         """
-
-        private const val getAllDepartmentsWithSectionsFiltered = """
+        private const val getAllDepartmentsFiltered = """
             SELECT 
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId, 
             s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} AS deptId
+            t.${transport.transportId}, t.${transport.type} as transportType, t.${transport.mark}, t.${transport.manufactureDate}, t.${transport.seats}, t.${transport.departmentId} AS tDeptId, t.${transport.color}, t.${transport.technicalState}
             FROM ${table} d
             LEFT JOIN ${section.table} s 
-            ON d.${departmentId} = s.${section.departmentId} 
+            ON d.${departmentId} = s.${section.departmentId}
+            LEFT JOIN ${transport.table} t
+            ON d.${departmentId} = t.${transport.departmentId} 
             WHERE d.studioid = ? AND $type ILIKE ?
         """
     }
@@ -114,8 +130,8 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
     override suspend fun getAllDepartments(studioId: Int, search: String?): List<Department> = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(
             search?.let {
-                getAllDepartmentsWithSectionsFiltered
-            } ?: getAllDepartmentsWithSections
+                getAllDepartmentsFiltered
+            } ?: getAllDepartments
         )
         statement.setInt(1, studioId)
         search?.let {
@@ -123,7 +139,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         }
         val result = statement.executeQuery()
 
-        return@withContext mutableMapOf<Department, List<Section>>().apply {
+        return@withContext mutableMapOf<Department, Pair<List<Section>, List<Transport>> >().apply {
             while (result.next()) {
                 val dept = Department(
                     departmentId = result.getInt(departmentId),
@@ -132,35 +148,73 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                     contactPerson = result.getString(contactPerson),
                     studioId = result.getInt(PostgresDepartmentDataSource.studioId),
                 )
-                val section = if(result.getInt(section.sectionId) != 0 ) {
-                    Section(
-                        sectionId = result.getInt(sectionId),
-                        title = result.getString(section.title),
-                        address = result.getString(section.address),
-                        internalPhoneNumber = result.getString(section.internalPhoneNumber),
-                        departmentId = result.getInt("deptId"),
+//                val section = if(result.getInt(section.sectionId) != 0 ) {
+//                    Section(
+//                        sectionId = result.getInt(sectionId),
+//                        title = result.getString(section.title),
+//                        address = result.getString(section.address),
+//                        internalPhoneNumber = result.getString(section.internalPhoneNumber),
+//                        departmentId = result.getInt("deptId"),
+//                    )
+//                } else null
+                val section: Section? = null
+
+                val transport = if(result.getInt(transport.transportId) != 0 ) {
+                    Transport (
+                        transportId = result.getInt(transport.transportId),
+                        type = result.getString("transportType"),
+                        mark = result.getString(transport.mark),
+                        manufactureDate = result.getDate(transport.manufactureDate).time,
+                        seats = result.getInt(transport.seats),
+                        departmentId = result.getInt("tDeptId"),
+                        color = result.getString(transport.color),
+                        technicalState = result.getString(transport.technicalState),
                     )
                 } else null
 
-                val list: List<Section> = this[dept] ?: emptyList()
+                println("--------- ${transport}")
+
+                val listOfSections: List<Section> = this[dept]?.first ?: emptyList()
+                val listOfTransport: List<Transport> = this[dept]?.second ?: emptyList()
 
                 when {
                     section != null && !this.containsKey(dept) -> {
-                        this[dept] = listOf(section)
+                        this[dept] = Pair(listOf(section), emptyList())
                     }
-                    section != null && this.containsKey(dept) && this[dept]?.isNotEmpty() == true -> {
-                        this[dept] = mutableListOf<Section>().apply {
-                            addAll(list)
-                            add(section)
-                        }
+                    section != null && this.containsKey(dept) && this[dept]?.first?.isNotEmpty() == true -> {
+                        this[dept] = Pair(
+                            mutableListOf<Section>().apply {
+                                addAll(listOfSections)
+                                add(section)
+                            },
+                            this[dept]?.second ?: emptyList()
+                        )
                     }
                     else -> {
-                        this[dept] = list
+                        this[dept] = Pair(listOfSections, this[dept]?.second ?: emptyList())
+                    }
+                }
+
+                when {
+                    transport != null && !this.containsKey(dept) -> {
+                        this[dept] = Pair(emptyList(), listOf(transport))
+                    }
+                    transport != null && this.containsKey(dept) && this[dept]?.second?.isNotEmpty() == true -> {
+                        this[dept] = Pair(
+                            this[dept]?.first ?: emptyList(),
+                            mutableListOf<Transport>().apply {
+                                addAll(listOfTransport)
+                                add(transport)
+                            }
+                        )
+                    }
+                    else -> {
+                        this[dept] = Pair (this[dept]?.first ?: emptyList(), listOfTransport)
                     }
                 }
 
             }
-        }.map { it.key.copy(sections = it.value) }
+        }.map { it.key.copy(sections = it.value.first, transport = it.value.second) }
     }
 
     override suspend fun getDepartmentByType(type: String): Department? = withContext(Dispatchers.IO) {

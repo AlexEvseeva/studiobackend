@@ -11,6 +11,16 @@ import javax.swing.plaf.nimbus.State
 
 class PostgresTransportDataSource(private val connection: Connection) : TransportDataSource {
     companion object {
+        const val table = "transport"
+        const val transportId = "transportId"
+        const val type = "type"
+        const val mark = "mark"
+        const val manufactureDate = "manufactureDate"
+        const val seats = "seats"
+        const val departmentId = "departmentId"
+        const val color = "color"
+        const val technicalState = "technicalState"
+
         private const val createTableTransport =
             """
                 CREATE TABLE IF NOT EXISTS transport (
@@ -31,7 +41,6 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
         private const val getAllTransport = "SELECT * FROM transport WHERE departmentId = ?"
         private const val getAllTransportFiltered = "SELECT * FROM transport WHERE departmentId = ? AND (type ILIKE ? OR mark ILIKE ? OR manufactureDate ILIKE ? OR seats ILIKE ? OR color ILIKE ? OR technicalState ILIKE ?))"
         private const val deleteTransport = "DELETE FROM transport WHERE transportId = ?"
-        private const val getTransportFiltered = "SELECT * FROM transport WHERE departmentId = ? AND (type = ? OR mark = ? OR manufactureDate = ? OR technicalState = ?)"
     }
 
     init {
