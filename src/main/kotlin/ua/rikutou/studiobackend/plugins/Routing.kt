@@ -24,6 +24,7 @@ import ua.rikutou.studiobackend.plugins.route.section.deleteSection
 import ua.rikutou.studiobackend.plugins.route.section.getAllSections
 import ua.rikutou.studiobackend.plugins.route.section.getSectionById
 import ua.rikutou.studiobackend.plugins.route.studio.createUpdateStudio
+import ua.rikutou.studiobackend.plugins.route.studio.deleteStudio
 import ua.rikutou.studiobackend.plugins.route.studio.getStudio
 import ua.rikutou.studiobackend.plugins.route.transport.createUpdateTransport
 import ua.rikutou.studiobackend.plugins.route.transport.deleteTransport
@@ -46,6 +47,7 @@ fun Application.configureRouting() {
 
         getStudio()
         createUpdateStudio()
+        deleteStudio()
 
         getLocationById()
         createUpdateLocation()

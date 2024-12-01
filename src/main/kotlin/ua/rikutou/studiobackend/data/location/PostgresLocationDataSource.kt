@@ -17,7 +17,7 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
                     width FLOAT,
                     length FLOAT,
                     height FLOAT,
-                    type VARCHAR(50),
+                    type VARCHAR(50) NOT NULL,
                     studioId INTEGER 
                         REFERENCES ${PostgresStudioDataSource.table} (${PostgresStudioDataSource.studioId}) 
                             ON DELETE CASCADE,
@@ -101,6 +101,7 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
     }
 
     override suspend fun updateLocation(locationId: Int?, studioId: Int?, location: Location?) = withContext(Dispatchers.IO) {
+
         if (locationId != null && studioId != null) {
             val statement = connection.prepareStatement(updateLocationStudioId)
             statement.apply {
@@ -120,15 +121,18 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
                 setString(6, location.type)
                 setFloat(8, location.rentPrice)
                 setInt(7, location.locationId ?: -1)
-            }.executeUpdate()
+            }
+            val count = statement.executeUpdate()
             return@withContext
         }
     }
 
     override suspend fun getAllLocations(studioId: Int, search: String?): List<Location> = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(search?.let {
-            getLocationsFiltered
-        } ?: getAllLocations)
+        val statement = connection.prepareStatement(
+            search?.let {
+                    getLocationsFiltered
+                } ?: getAllLocations
+        )
 
         statement.setInt(1, studioId)
         search?.let {

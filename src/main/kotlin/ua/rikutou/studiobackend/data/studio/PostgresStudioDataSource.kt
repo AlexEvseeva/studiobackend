@@ -14,6 +14,7 @@ class PostgresStudioDataSource(private val connection: Connection) : StudioDataS
         const val getStudioById = "SELECT * FROM studio WHERE studioId = ? LIMIT 1"
         const val getStudioByName = "SELECT * FROM studio WHERE name = ?"
         const val updateStudio = "UPDATE studio SET name = ?, address = ?, postIndex = ?, site = ?, youtube = ?, facebook = ? WHERE studioId = ?"
+        const val deleteStudio = "DELETE FROM studio WHERE studioId = ?"
     }
 
     init {
@@ -89,5 +90,11 @@ class PostgresStudioDataSource(private val connection: Connection) : StudioDataS
                 facebook = result.getString("facebook"),
             )
         } else null
+    }
+
+    override suspend fun deleteStudioById(studioId: Int): Unit = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(deleteStudio)
+        statement.setInt(1, studioId)
+        statement.execute()
     }
 }
