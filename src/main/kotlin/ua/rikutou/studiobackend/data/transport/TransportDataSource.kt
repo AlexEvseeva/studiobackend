@@ -5,6 +5,6 @@ import ua.rikutou.studiobackend.data.department.Department
 interface TransportDataSource {
     suspend fun insertUpdateTransport(transport: Transport): Int?
     suspend fun getTransportById(id: Int): Transport?
-    suspend fun getAllTransport(deaprtmentId: Int, search: String): List<Transport>
-    suspend fun deleteTransport(transportId: Int)
+    suspend fun getAllTransport(departmentId: Int, search: String?): List<Transport>
+    suspend fun deleteTransport(transportId: Int) : Unit
 }

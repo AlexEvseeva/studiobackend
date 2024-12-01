@@ -12,7 +12,7 @@ import ua.rikutou.studiobackend.plugins.route.department.getAllDepartments
 import ua.rikutou.studiobackend.plugins.route.department.getDepartmentById
 import ua.rikutou.studiobackend.plugins.route.equipment.createUpdateEquipment
 import ua.rikutou.studiobackend.plugins.route.equipment.deleteEquipment
-import ua.rikutou.studiobackend.plugins.route.equipment.getAllEquipment
+import ua.rikutou.studiobackend.plugins.route.equipment.GetAllEquipment
 import ua.rikutou.studiobackend.plugins.route.equipment.getEquipmentById
 import ua.rikutou.studiobackend.plugins.route.execute.executeQuery
 import ua.rikutou.studiobackend.plugins.route.location.createUpdateLocation
@@ -25,6 +25,10 @@ import ua.rikutou.studiobackend.plugins.route.section.getAllSections
 import ua.rikutou.studiobackend.plugins.route.section.getSectionById
 import ua.rikutou.studiobackend.plugins.route.studio.createUpdateStudio
 import ua.rikutou.studiobackend.plugins.route.studio.getStudio
+import ua.rikutou.studiobackend.plugins.route.transport.createUpdateTransport
+import ua.rikutou.studiobackend.plugins.route.transport.deleteTransport
+import ua.rikutou.studiobackend.plugins.route.transport.getAllTransport
+import ua.rikutou.studiobackend.plugins.route.transport.getTransportById
 import ua.rikutou.studiobackend.plugins.route.user.deleteUser
 import ua.rikutou.studiobackend.plugins.route.user.getUsersByStudioIdAndCandidates
 import ua.rikutou.studiobackend.plugins.route.user.updateUserStudio
@@ -49,7 +53,7 @@ fun Application.configureRouting() {
         deleteLocation()
 
         createUpdateEquipment()
-        getAllEquipment()
+        GetAllEquipment()
         getEquipmentById()
         deleteEquipment()
 
@@ -62,6 +66,11 @@ fun Application.configureRouting() {
         getSectionById()
         getAllSections()
         deleteSection()
+
+        createUpdateTransport()
+        getTransportById()
+        getAllTransport()
+        deleteTransport()
 
         getUsersByStudioIdAndCandidates()
         deleteUser()
