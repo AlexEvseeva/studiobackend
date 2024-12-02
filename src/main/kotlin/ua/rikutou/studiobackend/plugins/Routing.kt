@@ -3,6 +3,10 @@ package ua.rikutou.studiobackend.plugins
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.routing.*
+import ua.rikutou.studiobackend.plugins.route.actor.createUpdateActor
+import ua.rikutou.studiobackend.plugins.route.actor.deleteActor
+import ua.rikutou.studiobackend.plugins.route.actor.getActorById
+import ua.rikutou.studiobackend.plugins.route.actor.getAllActors
 import ua.rikutou.studiobackend.plugins.route.auth.me
 import ua.rikutou.studiobackend.plugins.route.auth.signIn
 import ua.rikutou.studiobackend.plugins.route.auth.signUp
@@ -73,6 +77,11 @@ fun Application.configureRouting() {
         getTransportById()
         getAllTransport()
         deleteTransport()
+
+        createUpdateActor()
+        getActorById()
+        getAllActors()
+        deleteActor()
 
         getUsersByStudioIdAndCandidates()
         deleteUser()
