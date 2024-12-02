@@ -29,7 +29,6 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         private const val getLocationById = "SELECT * FROM location WHERE locationId = ?"
         private const val updateLocationStudioId = "UPDATE location SET studioId = ? WHERE locationId = ?"
         private const val getAllLocations = "SELECT * FROM location WHERE studioId = ?"
-        private const val getLocationsFiltered = "SELECT * FROM location WHERE studioId = ? AND (name ILIKE ? OR address ILIKE ?)"
         private const val updateLocation = "UPDATE location SET name = ?, address = ?, width = ?, length = ?, height = ?, type = ?,rentPrice = ? WHERE locationId = ?"
         private const val deleteLocation = "DELETE FROM location WHERE locationId = ?"
     }
@@ -127,20 +126,55 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         }
     }
 
-    override suspend fun getAllLocations(studioId: Int, search: String?): List<Location> = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(
+    override suspend fun getAllLocations(
+        studioId: Int,
+        search: String?,
+        type: String?,
+        widthFrom: Int?,
+        widthTo: Int?,
+        lengthFrom: Int?,
+        lengthTo: Int?,
+        heightFrom: Int?,
+        heightTo: Int?
+    ): List<Location> = withContext(Dispatchers.IO) {
+
+        val filterParams =if(search?.isNotEmpty() == true
+            || type?.isNotEmpty() == true
+            || widthFrom != null
+            || widthTo != null
+            || lengthFrom != null
+            || lengthTo != null
+            || heightFrom != null
+            || heightTo != null ) {
+            StringBuilder().apply {
             search?.let {
-                    getLocationsFiltered
-                } ?: getAllLocations
-        )
+                append(" AND (name ILIKE '%$it%' OR address ILIKE '%$it%')")
+            }
+            when {
+                widthFrom != null && widthTo != null -> append(" AND width BETWEEN $widthFrom AND $widthTo")
+                widthFrom != null && widthTo == null -> append(" AND width >= $widthFrom")
+                widthFrom == null && widthTo != null -> append(" AND width <= $widthTo")
+            }
+            when {
+                lengthFrom != null && lengthTo != null -> append(" AND length BETWEEN $lengthFrom AND $lengthTo")
+                lengthFrom != null && lengthTo == null -> append(" AND length >= $lengthFrom")
+                lengthFrom == null && lengthTo != null -> append(" AND length <= $lengthTo")
+            }
+            when {
+                heightFrom != null && heightTo != null -> append(" AND height BETWEEN $heightFrom AND $heightTo")
+                heightFrom != null && heightTo == null -> append(" AND height >= $heightFrom")
+                heightFrom == null && heightTo != null -> append(" AND height <= $heightTo")
+            }
+        }.toString()
+            } else null
+
+        val sqlString = filterParams?.let { "$getAllLocations $it" } ?: getAllLocations
+
+        val statement = connection.prepareStatement(sqlString)
 
         statement.setInt(1, studioId)
-        search?.let {
-            val searchString = "%$search%"
-            statement.setString(2, searchString)
-            statement.setString(3, searchString)
-        }
-
+        println("--------$sqlString")
+        println("--------$statement")
         val result = statement.executeQuery()
         return@withContext mutableListOf<Location>().apply {
             while(result.next()) {

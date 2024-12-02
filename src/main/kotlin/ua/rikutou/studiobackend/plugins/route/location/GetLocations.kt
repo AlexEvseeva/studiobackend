@@ -2,7 +2,6 @@ package ua.rikutou.studiobackend.plugins.route.location
 
 import io.ktor.http.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
@@ -18,7 +17,7 @@ fun Route.getLocations() {
             val locationDataSource by application.inject<LocationDataSource>()
             val galleryDataSource by application.inject<GalleryDataSource>()
 
-            val studioId = call.parameters["studioId"]?.toInt() ?: run {
+            val studioId = call.runCatching { parameters["studioId"]?.toInt() }.getOrNull() ?: run {
                 call.respond(
                     status = HttpStatusCode.BadRequest,
                     message = Error(
@@ -28,12 +27,29 @@ fun Route.getLocations() {
                 )
                 return@get
             }
+
             val search = call.parameters["search"]
+            val type = call.parameters["type"]
+            val widthFrom = call.runCatching { parameters["widthFrom"]?.toInt() }.getOrNull()
+            val widthTo = call.runCatching { parameters["widthTo"]?.toInt() }.getOrNull()
+            val lengthFrom = call.runCatching { parameters["lengthFrom"]?.toInt() }.getOrNull()
+            val lengthTo = call.runCatching { parameters["lengthTo"]?.toInt() }.getOrNull()
+            val heightFrom = call.runCatching { parameters["heightFrom"]?.toInt() }.getOrNull()
+            val heightTo = call.runCatching { parameters["heightTo"]?.toInt() }.getOrNull()
+
+            println("------ s: $search, type: $type, wf: $widthFrom, wt: $widthTo, lf: $lengthFrom, lt: $lengthTo, hf: $heightFrom, ht: $heightTo")
 
             val locations = locationDataSource
                 .getAllLocations(
                     studioId = studioId,
-                    search = search
+                    search = search,
+                    type = type,
+                    widthFrom = widthFrom,
+                    widthTo = widthTo,
+                    lengthFrom = lengthFrom,
+                    lengthTo = lengthTo,
+                    heightFrom = heightFrom,
+                    heightTo = heightTo
                 )
             if (locations.isEmpty()) {
                 call.respond(status = HttpStatusCode.NotFound, message = Error(code = HttpStatusCode.NotFound.value, message = "Locations not found."))
