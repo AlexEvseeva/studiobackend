@@ -52,7 +52,7 @@ fun appModule(
     singleOf(::PostgresSectionDataSource) { bind <SectionDataSource>() }
     singleOf(::PostgresExecuteDataSource) { bind<ExecuteDataSource>() }
     singleOf(::PostgresTransportDataSource) {bind<TransportDataSource>() }
-    singleOf(::PostgresActorDataSourse) {bind<ActorDataSource>()}
+    singleOf(::PostgresActorDataSource) { bind<PostgresActorDataSource>() }
 
     single<TokenConfig> {
         TokenConfig(
