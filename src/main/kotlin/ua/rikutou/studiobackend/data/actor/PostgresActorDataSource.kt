@@ -2,7 +2,15 @@ package ua.rikutou.studiobackend.data.actor
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.rikutou.studiobackend.data.film.Film
+import ua.rikutou.studiobackend.data.actorFilm.ActorFilm
+import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.budget
+import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.date
+import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.director
+import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.title
+import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.writer
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
+import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource as film
 import java.sql.Connection
 import java.sql.Statement
 
@@ -30,15 +38,62 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
         private const val insertActor = "INSERT INTO $table ($name, $nickName, $role, $studioId) VALUES (?, ?, ?, ?)"
         private const val updateActor = "UPDATE $table SET $name = ?, $nickName = ?, $role = ?, $studioId = ? WHERE $actorId = ?"
         private const val deleteActor = "DELETE FROM $table WHERE $actorId = ?"
-        private const val getAllActors = "SELECT * FROM $table WHERE $studioId = ?"
-        private const val getAllActorsFiltered = "SELECT * FROM $table WHERE $studioId = ? AND ($name ILIKE ? OR $nickName ILIKE ? OR $role ILIKE ?)"
-        private const val getActorById = "SELECT * FROM $table WHERE $actorId = ?"
+        private const val getAllActors = """
+            SELECT 
+            actor.actorId, actor.name, actor.nickname, actor.role, actor.studioId,
+            film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
+            actor_film.role AS roleInFilm
+            FROM ${table}
+            LEFT JOIN actor_film ON actor.actorId = actor_film.actorId
+            LEFT JOIN film ON actor_film.filmId = film.filmId
+            WHERE actor.studioId = ?
+        """
+
+        private const val getAllActorsFiltered = """
+            SELECT 
+            actor.actorId, actor.name, actor.nickname, actor.role, actor.studioId,
+            film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
+            actor_film.role AS roleInFilm
+            FROM ${table}
+            LEFT JOIN actor_film ON actor.actorId = actor_film.actorId
+            LEFT JOIN film ON actor_film.filmId = film.filmId
+            WHERE actor.actorId = ?
+            AND ($name ILIKE ? OR $nickName ILIKE ? OR $role ILIKE ?)
+        """
+
+        private const val getActorById = """
+            SELECT 
+            actor.actorId, actor.name, actor.nickname, actor.role, actor.studioId,
+            film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
+            actor_film.role AS roleInFilm
+            FROM ${table}
+            LEFT JOIN actor_film ON actor.actorId = actor_film.actorId
+            LEFT JOIN film ON actor_film.filmId = film.filmId
+            WHERE actor.actorId = ?
+        """
+
+        private const val createActorToFilmTable = """
+            CREATE TABLE IF NOT EXISTS actor_film (
+            $actorId INTEGER
+                REFERENCES ${table} (${actorId})
+                ON DELETE CASCADE,
+            filmId INTEGER
+                REFERENCES ${film.table} (${film.filmId})
+                ON DELETE CASCADE,
+            role VARCHAR(250) NOT NULL
+            )
+        """
     }
 
     init {
         connection
             .createStatement()
             .executeUpdate(createTableActor)
+        connection
+            .createStatement()
+            .executeUpdate(createActorToFilmTable)
+        connection.createStatement()
+            .executeUpdate(film.createTableFilm)
     }
 
     override suspend fun insertUpdateActors(actor: Actor): Int? = withContext(Dispatchers.IO) {
@@ -71,15 +126,56 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
         statement.setInt(1, id)
         val result = statement.executeQuery()
 
-        return@withContext if (result.next()) {
-            Actor(
-                actorId = result.getInt(actorId),
-                name = result.getString(name),
-                nickName = result.getString(nickName),
-                role = result.getString(role),
-                studioId = result.getInt(studioId)
+        return@withContext mutableMapOf<Actor, Pair<MutableSet<Film>, MutableSet<ActorFilm>>>().apply {
+            while (result.next()) {
+                val actor = Actor(
+                    actorId = result.getInt(actorId),
+                    name = result.getString(name),
+                    nickName = result.getString(nickName),
+                    role = result.getString(role),
+                    studioId = result.getInt(studioId)
+                )
+
+                val film = if(result.getInt(film.filmId) != 0) {
+                    val genres = result.getArray("genres")
+                    val intArray = genres.array as Array<Int>
+                    Film (
+                        filmId = result.getInt(film.filmId),
+                        title = result.getString(title),
+                        genres = intArray,
+                        director = result.getString(director),
+                        writer = result.getString(writer),
+                        date = result.getDate(date).time,
+                        budget = result.getFloat(budget)
+                    )
+                } else null
+
+                val actorFilm = if(film?.filmId != null && result.getInt(film.filmId) != 0) {
+                    ActorFilm(
+                        actorId = result.getInt(actorId),
+                        filmId = result.getInt(film.filmId),
+                        role = result.getString("roleInFilm")
+                    )
+                } else null
+
+                if(!containsKey(actor)) {
+                    this[actor] = Pair(mutableSetOf<Film>(), mutableSetOf<ActorFilm>())
+                }
+
+                film?.let {
+                    this[actor]?.first?.add(it)
+                }
+                actorFilm?.let {
+                    this[actor]?.second?.add(it)
+                }
+            }
+
+        }.map {
+            it.key.copy(
+                films = it.value.first.toList(),
+                actorFilms = it.value.second.toList()
             )
-        } else null
+        }.first()
     }
 
     override suspend fun getAllActors(studioId: Int, search: String?): List<Actor> = withContext(Dispatchers.IO) {
@@ -95,18 +191,55 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
         }
 
         val result = statement.executeQuery()
-        return@withContext mutableListOf<Actor>().apply {
+        return@withContext mutableMapOf<Actor, Pair<MutableSet<Film>, MutableSet<ActorFilm>>>().apply {
             while (result.next()) {
-                add(
-                    Actor(
-                        actorId = result.getInt(actorId),
-                        name = result.getString(name),
-                        nickName = result.getString(nickName),
-                        role = result.getString(role),
-                        studioId = result.getInt(Companion.studioId)
-                    )
+                val actor = Actor(
+                    actorId = result.getInt(actorId),
+                    name = result.getString(name),
+                    nickName = result.getString(nickName),
+                    role = result.getString(role),
+                    studioId = result.getInt(Companion.studioId)
                 )
+
+                val film = if(result.getInt(film.filmId) != 0) {
+                    val genres = result.getArray("genres")
+                    val intArray = genres.array as Array<Int>
+                    Film (
+                        filmId = result.getInt(film.filmId),
+                        title = result.getString(title),
+                        genres = intArray,
+                        director = result.getString(director),
+                        writer = result.getString(writer),
+                        date = result.getDate(date).time,
+                        budget = result.getFloat(budget)
+                    )
+                } else null
+
+                val actorFilm = if(film?.filmId != null && result.getInt(film.filmId) != 0) {
+                    ActorFilm(
+                        actorId = result.getInt(actorId),
+                        filmId = result.getInt(film.filmId),
+                        role = result.getString("roleInFilm")
+                    )
+                } else null
+
+                if(!containsKey(actor)) {
+                    this[actor] = Pair(mutableSetOf<Film>(), mutableSetOf<ActorFilm>())
+                }
+
+                film?.let {
+                    this[actor]?.first?.add(it)
+                }
+                actorFilm?.let {
+                    this[actor]?.second?.add(it)
+                }
             }
+
+        }.map {
+            it.key.copy(
+                films = it.value.first.toList(),
+                actorFilms = it.value.second.toList()
+            )
         }
     }
 

@@ -10,6 +10,7 @@ import ua.rikutou.studiobackend.data.department.DepartmentDataSource
 import ua.rikutou.studiobackend.data.department.PostgresDepartmentDataSource
 import ua.rikutou.studiobackend.data.equipment.EquipmentDataSource
 import ua.rikutou.studiobackend.data.transport.PostgresTransportDataSource
+import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource
 import ua.rikutou.studiobackend.data.user.PostgresUserDataSource
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
@@ -23,6 +24,7 @@ import ua.rikutou.studiobackend.data.gallery.PostgresGalleryDataSource
 import ua.rikutou.studiobackend.data.section.SectionDataSource
 import ua.rikutou.studiobackend.data.execute.ExecuteDataSource
 import ua.rikutou.studiobackend.data.execute.PostgresExecuteDataSource
+import ua.rikutou.studiobackend.data.film.FilmDataSource
 import ua.rikutou.studiobackend.data.transport.TransportDataSource
 import ua.rikutou.studiobackend.security.token.TokenConfig
 import ua.rikutou.studiobackend.security.token.TokenService
@@ -53,6 +55,7 @@ fun appModule(
     singleOf(::PostgresExecuteDataSource) { bind<ExecuteDataSource>() }
     singleOf(::PostgresTransportDataSource) {bind<TransportDataSource>() }
     singleOf(::PostgresActorDataSource) { bind<ActorDataSource>() }
+    singleOf(::PostgresFilmDataSource) { bind<FilmDataSource>() }
 
     single<TokenConfig> {
         TokenConfig(

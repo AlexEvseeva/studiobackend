@@ -1,6 +1,8 @@
 package ua.rikutou.studiobackend.data.actor
 
 import kotlinx.serialization.Serializable
+import ua.rikutou.studiobackend.data.actorFilm.ActorFilm
+import ua.rikutou.studiobackend.data.film.Film
 
 @Serializable
 data class Actor(
@@ -9,4 +11,6 @@ data class Actor(
     val nickName: String? = null,
     val role: String? = null,
     val studioId: Int,
+    val films: List<Film>? = null,
+    val actorFilms: List<ActorFilm>? = null,
 )

@@ -81,9 +81,11 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
 
         return@withContext if (transport.transportId != null) {
             transport.transportId
-        } else if (statement.generatedKeys.next()) {
+        }
+        else if (statement.generatedKeys.next()) {
             statement.generatedKeys.getInt(1)
-        } else null
+        }
+        else null
     }
 
     override suspend fun getTransportById(id: Int): Transport? = withContext(Dispatchers.IO) {
