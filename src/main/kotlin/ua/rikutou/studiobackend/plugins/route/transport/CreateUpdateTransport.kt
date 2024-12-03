@@ -10,6 +10,7 @@ import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.transport.Transport
 import ua.rikutou.studiobackend.data.transport.TransportDataSource
 import ua.rikutou.studiobackend.data.transport.requests.TransportRequest
+import ua.rikutou.studiobackend.data.transport.toTransportType
 
 fun Route.createUpdateTransport() {
     authenticate {
@@ -32,7 +33,7 @@ fun Route.createUpdateTransport() {
 
             val transport = Transport(
                 transportId = request.transportId,
-                type = request.type,
+                type = request.type.toTransportType(),
                 mark = request.mark,
                 manufactureDate = request.manufactureDate,
                 seats = request.seats,

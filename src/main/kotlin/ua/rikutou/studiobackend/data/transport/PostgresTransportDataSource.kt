@@ -3,11 +3,10 @@ package ua.rikutou.studiobackend.data.transport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ua.rikutou.studiobackend.data.department.PostgresDepartmentDataSource
-import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import java.sql.Connection
 import java.sql.Date
 import java.sql.Statement
-import javax.swing.plaf.nimbus.State
+import java.text.SimpleDateFormat
 
 class PostgresTransportDataSource(private val connection: Connection) : TransportDataSource {
     companion object {
@@ -25,7 +24,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
             """
                 CREATE TABLE IF NOT EXISTS transport (
                     transportId SERIAL PRIMARY KEY,
-                    type VARCHAR(100),
+                    type INTEGER,
                     mark VARCHAR(100),
                     manufactureDate DATE,
                     seats INTEGER,
@@ -38,8 +37,15 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
         private const val insertTransport = "INSERT INTO transport (type, mark, manufactureDate, seats, departmentId, color, technicalState) VALUES (?, ?, ?, ?, ?, ?, ?)"
         private const val updateTransport = "UPDATE transport SET type = ?, mark = ?, manufactureDate = ?, seats = ?, departmentId = ?, color = ?, technicalState = ? WHERE transportId = ?"
         private const val getTransportById = "SELECT * FROM transport WHERE transportId = ?"
-        private const val getAllTransport = "SELECT * FROM transport WHERE departmentId = ?"
-        private const val getAllTransportFiltered = "SELECT * FROM transport WHERE departmentId = ? AND (type ILIKE ? OR mark ILIKE ? OR manufactureDate ILIKE ? OR seats ILIKE ? OR color ILIKE ? OR technicalState ILIKE ?))"
+        private const val getAllTransport =
+            """
+                SELECT t.transportid, t.type AS ttype, t.mark, t.manufacturedate, t.seats, t.departmentid, t.color, t.technicalstate,
+                       d.studioid
+                FROM transport t
+                LEFT JOIN department d ON t.departmentid = d.departmentid
+                WHERE d.studioid = ?
+            """
+//        private const val getAllTransportFiltered = "SELECT * FROM transport WHERE departmentId = ? AND (type ILIKE ? OR mark ILIKE ? OR manufactureDate ILIKE ? OR seats ILIKE ? OR color ILIKE ? OR technicalState ILIKE ?))"
         private const val deleteTransport = "DELETE FROM transport WHERE transportId = ?"
     }
 
@@ -51,7 +57,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
     override suspend fun insertUpdateTransport(transport: Transport): Int? = withContext(Dispatchers.IO) {
         val statement = if (transport.transportId != null) {
             connection.prepareStatement(updateTransport).apply {
-                setString(1, transport.type)
+                setInt(1, transport.type.fromTransportType())
                 setString(2, transport.mark)
                 setDate(3, Date(transport.manufactureDate))
                 setInt(4, transport.seats)
@@ -62,7 +68,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
             }
         } else {
             connection.prepareStatement(insertTransport, Statement.RETURN_GENERATED_KEYS).apply {
-                setString(1, transport.type)
+                setInt(1, transport.type.fromTransportType())
                 setString(2, transport.mark)
                 setDate(3, Date(transport.manufactureDate))
                 setInt(4, transport.seats)
@@ -88,7 +94,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
         return@withContext if (result.next()) {
             Transport (
                 transportId = result.getInt("transportId"),
-                type = result.getString("type"),
+                type = result.getInt("type").toTransportType(),
                 mark = result.getString("mark"),
                 manufactureDate = result.getDate("manufactureDate").time,
                 seats = result.getInt("seats"),
@@ -99,20 +105,62 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
         } else null
     }
 
-    override suspend fun getAllTransport(departmentId: Int, search: String?): List<Transport> = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(search?.let {
-            getAllTransportFiltered
-        } ?: getAllTransport)
-        statement.setInt(1, departmentId)
-        search?.let {
-            val searchString = "%$search%"
-            statement.setString(2, searchString)
-            statement.setString(3, searchString)
-            statement.setString(4, searchString)
-            statement.setString(5, searchString)
-            statement.setString(6, searchString)
-            statement.setString(7, searchString)
-        }
+    override suspend fun getAllTransport(
+        studioId: Int,
+        search: String?,
+        type: TransportType?,
+        manufactureDateFrom: Long?,
+        manufactureDateTo: Long?,
+        seatsFrom: Int?,
+        seatsTo: Int?
+    ): List<Transport> = withContext(Dispatchers.IO) {
+
+        val filterParams = if(search?.isNotEmpty() == true
+            || type != null
+            || manufactureDateFrom != null
+            || manufactureDateTo != null
+            || seatsFrom != null
+            || seatsTo != null
+            ) {
+            val formater = SimpleDateFormat("YYYY-MM-dd")
+                StringBuilder().apply {
+                    search?.let {
+                        append(" AND (mark ILIKE '%$it%' OR color ILIKE '%$it%' OR technicalState ILIKE '%$it%') ")
+                    }
+                    type?.let {
+                        append(" AND (t.type = $it) ")
+                    }
+                    when {
+                        manufactureDateFrom != null && manufactureDateTo != null -> {
+                            append(" AND ( manufacturedate BETWEEN '${formater.format(manufactureDateFrom)}' AND '${formater.format(manufactureDateTo)}' )")
+                        }
+                        manufactureDateFrom != null && manufactureDateTo == null -> {
+                            append(" AND ( manufacturedate >= '${formater.format(manufactureDateFrom)}' ) ")
+                        }
+                        manufactureDateFrom == null && manufactureDateTo != null -> {
+                            append(" AND ( manufacturedate <= '${formater.format(manufactureDateTo)}' )")
+                        }
+                    }
+                    when {
+                        seatsFrom != null && seatsTo != null -> {
+                            append(" AND ( seats BETWEEN $seatsFrom AND $seatsTo )")
+                        }
+                        seatsFrom != null && seatsTo == null -> {
+                            append(" AND ( seats >= $seatsFrom) ")
+                        }
+                        seatsFrom == null && seatsTo != null -> {
+                            append(" AND ( seats <= $seatsTo )")
+                        }
+                    }
+                }
+
+        } else null
+
+        val sqlString = filterParams?.let { "$getAllTransport $it" } ?: getAllTransport
+
+
+        val statement = connection.prepareStatement(sqlString)
+        statement.setInt(1, studioId)
 
         val result = statement.executeQuery()
         return@withContext mutableListOf<Transport>().apply {
@@ -120,7 +168,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                 add (
                     Transport(
                         transportId = result.getInt("transportId"),
-                        type = result.getString("type"),
+                        type = result.getInt("ttype").toTransportType(),
                         mark = result.getString("mark"),
                         manufactureDate = result.getDate("manufactureDate").time,
                         seats = result.getInt("seats"),

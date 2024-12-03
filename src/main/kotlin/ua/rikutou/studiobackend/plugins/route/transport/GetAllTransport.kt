@@ -7,26 +7,40 @@ import io.ktor.server.response.*
 import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.transport.TransportDataSource
+import ua.rikutou.studiobackend.data.transport.toTransportType
 
 fun Route.getAllTransport() {
     authenticate {
         get("transport") {
             val transportDataSource by application.inject<TransportDataSource>()
 
-            val departmentId = call.parameters["departmentId"]?.toInt() ?: run {
+            val studioId = call.runCatching { parameters["studioId"]?.toInt() }.getOrNull() ?: run {
                 call.respond(
                     status = HttpStatusCode.BadRequest,
                     message = Error (
                         code = HttpStatusCode.BadRequest.value,
-                        message = "Department ID not found"
+                        message = "Studio ID not found"
                     )
                 )
                 return@get
             }
-
             val search = call.parameters["search"]
+            val type = call.runCatching { parameters["type"]?.toInt()?.toTransportType() }.getOrNull()
+            val manufactureDateFrom = call.runCatching { parameters["manufactureDateFrom"]?.toLong() }.getOrNull()
+            val manufactureDateTo = call.runCatching { parameters["manufactureDateFrom"]?.toLong() }.getOrNull()
+            val seatsFrom = call.runCatching { parameters["seatsFrom"]?.toInt() }.getOrNull()
+            val seatsTo = call.runCatching { parameters["seatsTo"]?.toInt() }.getOrNull()
 
-            val transport = transportDataSource.getAllTransport(departmentId = departmentId, search = search)
+
+            val transport = transportDataSource.getAllTransport(
+                studioId = studioId,
+                search = search,
+                type = type,
+                manufactureDateFrom = manufactureDateFrom,
+                manufactureDateTo = manufactureDateTo,
+                seatsFrom = seatsFrom,
+                seatsTo = seatsTo
+            )
             if (transport.isEmpty()) {
                 call.respond(
                     status = HttpStatusCode.NotFound,

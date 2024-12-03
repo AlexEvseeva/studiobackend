@@ -6,6 +6,7 @@ import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource.Companion
 import ua.rikutou.studiobackend.data.section.Section
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.transport.Transport
+import ua.rikutou.studiobackend.data.transport.toTransportType
 import java.sql.Connection
 import java.sql.Statement
 import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource as section
@@ -150,7 +151,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                 val transport = if(result.getInt(transport.transportId) != 0 ) {
                     Transport (
                         transportId = result.getInt(transport.transportId),
-                        type = result.getString("transportType"),
+                        type = result.getInt("transportType").toTransportType(),
                         mark = result.getString(transport.mark),
                         manufactureDate = result.getDate(transport.manufactureDate).time,
                         seats = result.getInt(transport.seats),

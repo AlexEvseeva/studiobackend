@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TransportRequest(
     val transportId: Int? = null,
-    val type: String,
+    val type: Int,
     val mark: String,
     val manufactureDate: Long,
     val seats: Int,
