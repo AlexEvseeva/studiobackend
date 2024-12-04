@@ -51,7 +51,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
             LEFT JOIN film ON af.filmId = film.filmId
             LEFT JOIN actor_phone ap ON ap.actorId = actor.actorId
-            LEFT JOIN photo p ON ap.photoId = p.phoneId
+            LEFT JOIN phone p ON ap.phoneId = p.phoneId
             WHERE actor.studioId = ?
         """
 
@@ -65,7 +65,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
             LEFT JOIN film ON af.filmId = film.filmId
             LEFT JOIN actor_phone ap ON ap.actorId = actor.actorId
-            LEFT JOIN photo p ON ap.photoId = p.phoneId
+            LEFT JOIN phone p ON ap.phoneId = p.phoneId
             WHERE actor.actorId = ?
             AND ($name ILIKE ? OR $nickName ILIKE ? OR $role ILIKE ?)
         """
