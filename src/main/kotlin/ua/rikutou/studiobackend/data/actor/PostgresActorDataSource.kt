@@ -40,7 +40,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
         private const val deleteActor = "DELETE FROM $table WHERE $actorId = ?"
         private const val getAllActors = """
             SELECT 
-            actor.actorId, actor.name, actor.nickname, actor.role, actor.studioId,
+            actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
             actor_film.role AS roleInFilm
             FROM ${table}
@@ -51,7 +51,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
 
         private const val getAllActorsFiltered = """
             SELECT 
-            actor.actorId, actor.name, actor.nickname, actor.role, actor.studioId,
+            actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
             actor_film.role AS roleInFilm
             FROM ${table}
@@ -197,7 +197,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                     actorId = result.getInt(actorId),
                     name = result.getString(name),
                     nickName = result.getString(nickName),
-                    role = result.getString(role),
+                    role = result.getString("actorRole"),
                     studioId = result.getInt(Companion.studioId)
                 )
 
