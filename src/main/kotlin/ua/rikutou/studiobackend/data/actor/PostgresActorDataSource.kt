@@ -9,6 +9,9 @@ import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.date
 import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.director
 import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.title
 import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.writer
+import ua.rikutou.studiobackend.data.phone.Phone
+import ua.rikutou.studiobackend.data.phone.PostgresPhoneDataSource
+import ua.rikutou.studiobackend.data.phone.PostgresPhoneDataSource.Companion.phoneNumber
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource as film
 import java.sql.Connection
@@ -16,12 +19,12 @@ import java.sql.Statement
 
 class PostgresActorDataSource(private val connection: Connection) : ActorDataSource {
     companion object {
-        private const val table = "actor"
-        private const val actorId = "actorId"
-        private const val name = "name"
-        private const val nickName = "nickName"
-        private const val role = "role"
-        private const val studioId = "studioId"
+        const val table = "actor"
+        const val actorId = "actorId"
+        const val name = "name"
+        const val nickName = "nickName"
+        const val role = "role"
+        const val studioId = "studioId"
 
         private const val createTableActor =
             """
@@ -43,9 +46,12 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
             af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm
+            p.phoneNumber, p.phoneId AS pPhoneId
             FROM ${table}
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
             LEFT JOIN film ON af.filmId = film.filmId
+            LEFT JOIN actor_phone ap ON ap.actorId = actor.actorId
+            LEFT JOIN photo p ON ap.photoId = p.phoneId
             WHERE actor.studioId = ?
         """
 
@@ -54,9 +60,12 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
             af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm
+            p.phoneNumber, p.phoneId AS pPhoneId
             FROM ${table}
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
             LEFT JOIN film ON af.filmId = film.filmId
+            LEFT JOIN actor_phone ap ON ap.actorId = actor.actorId
+            LEFT JOIN photo p ON ap.photoId = p.phoneId
             WHERE actor.actorId = ?
             AND ($name ILIKE ? OR $nickName ILIKE ? OR $role ILIKE ?)
         """
@@ -66,9 +75,12 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             actor.actorId, actor.name, actor.nickname, actor.role, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
             actor_film.role AS roleInFilm
+            phone.phoneNumber
             FROM ${table}
             LEFT JOIN actor_film ON actor.actorId = actor_film.actorId
             LEFT JOIN film ON actor_film.filmId = film.filmId
+            LEFT JOIN actor_phone ON actor_phone.actorId = actor.actorId
+            LEFT JOIN phone ON actor_phone.phoneId = phone.phoneId
             WHERE actor.actorId = ?
         """
 
@@ -83,17 +95,37 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             role VARCHAR(250) NOT NULL
             )
         """
+
+        private const val createActorToPhoneTable = """
+            CREATE TABLE IF NOT EXISTS actor_phone (
+            $actorId INTEGER
+                REFERENCES ${table} (${actorId})
+                ON DELETE CASCADE,
+            phoneId INTEGER
+                REFERENCES ${PostgresPhoneDataSource.table} (${PostgresPhoneDataSource.phoneId})
+                ON DELETE CASCADE
+            )
+        """
     }
 
     init {
         connection
             .createStatement()
             .executeUpdate(createTableActor)
+
         connection
             .createStatement()
             .executeUpdate(createActorToFilmTable)
-        connection.createStatement()
+        connection
+            .createStatement()
             .executeUpdate(film.createTableFilm)
+
+        connection
+            .createStatement()
+            .executeUpdate(createActorToPhoneTable)
+        connection
+            .createStatement()
+            .executeUpdate(PostgresPhoneDataSource.createTablePhone)
     }
 
     override suspend fun insertUpdateActors(actor: Actor): Int? = withContext(Dispatchers.IO) {
@@ -191,7 +223,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
         }
 
         val result = statement.executeQuery()
-        return@withContext mutableMapOf<Actor, Pair<MutableSet<Film>, MutableSet<ActorFilm>>>().apply {
+        return@withContext mutableMapOf<Actor, ActorRelation>().apply {
             while (result.next()) {
                 val actor = Actor(
                     actorId = result.getInt(actorId),
@@ -223,22 +255,33 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                     )
                 } else null
 
+                val phone = if(result.getString(PostgresPhoneDataSource.phoneNumber)?.isNotEmpty() == true) {
+                    Phone(
+                        phoneId = result.getInt("pPhoneid"),
+                        phoneNumber = result.getString(phoneNumber)
+                    )
+                } else null
+
                 if(!containsKey(actor)) {
-                    this[actor] = Pair(mutableSetOf<Film>(), mutableSetOf<ActorFilm>())
+                    this[actor] = ActorRelation()
                 }
 
                 film?.let {
-                    this[actor]?.first?.add(it)
+                    this[actor]?.films?.add(it)
                 }
                 actorFilm?.let {
-                    this[actor]?.second?.add(it)
+                    this[actor]?.actorToFilms?.add(it)
+                }
+                phone?.let {
+                    this[actor]?.phones?.add(it)
                 }
             }
 
         }.map {
             it.key.copy(
-                films = it.value.first.toList(),
-                actorFilms = it.value.second.toList()
+                films = it.value.films.toList(),
+                actorFilms = it.value.actorToFilms.toList(),
+                phones = it.value.phones.toList(),
             )
         }
     }

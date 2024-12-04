@@ -3,6 +3,7 @@ package ua.rikutou.studiobackend.data.actor
 import kotlinx.serialization.Serializable
 import ua.rikutou.studiobackend.data.actorFilm.ActorFilm
 import ua.rikutou.studiobackend.data.film.Film
+import ua.rikutou.studiobackend.data.phone.Phone
 
 @Serializable
 data class Actor(
@@ -13,4 +14,5 @@ data class Actor(
     val studioId: Int,
     val films: List<Film>? = null,
     val actorFilms: List<ActorFilm>? = null,
+    val phones: List<Phone>? = null,
 )
