@@ -15,8 +15,8 @@ class PostgresPhoneDataSource(private val connection: Connection) : PhoneDataSou
 
         const val createTablePhone = """
             CREATE TABLE IF NOT EXISTS $table (
-            $phoneId INTEGER PRIMARY KEY,
-            $phoneNumber VARCHAR(12) NOT NULL,
+            $phoneId SERIAL PRIMARY KEY,
+            $phoneNumber VARCHAR(12) NOT NULL
             )
         """
         private const val insertPhone = "INSERT INTO $table ($phoneId, $phoneNumber) VALUES (?, ?)"

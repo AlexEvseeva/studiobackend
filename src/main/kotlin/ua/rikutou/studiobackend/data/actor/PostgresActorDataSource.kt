@@ -45,7 +45,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             SELECT 
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
-            af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm
+            af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm,
             p.phoneNumber, p.phoneId AS pPhoneId
             FROM ${table}
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
@@ -59,7 +59,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             SELECT 
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
-            af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm
+            af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm,
             p.phoneNumber, p.phoneId AS pPhoneId
             FROM ${table}
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
@@ -245,7 +245,8 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                         date = result.getDate(date).time,
                         budget = result.getFloat(budget)
                     )
-                } else null
+                }
+                else null
 
                 val actorFilm = if(result.getString("roleInFilm")?.isNotEmpty() === true) {
                     ActorFilm(
@@ -253,14 +254,16 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                         filmId = result.getInt("affilmid"),
                         role = result.getString("roleInFilm")
                     )
-                } else null
+                }
+                else null
 
-                val phone = if(result.getString(PostgresPhoneDataSource.phoneNumber)?.isNotEmpty() == true) {
+                val phone = if(result.getString(phoneNumber)?.isNotEmpty() == true) {
                     Phone(
                         phoneId = result.getInt("pPhoneid"),
                         phoneNumber = result.getString(phoneNumber)
                     )
-                } else null
+                }
+                else null
 
                 if(!containsKey(actor)) {
                     this[actor] = ActorRelation()

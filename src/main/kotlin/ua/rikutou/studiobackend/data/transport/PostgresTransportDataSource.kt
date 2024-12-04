@@ -20,7 +20,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
         const val color = "color"
         const val technicalState = "technicalState"
 
-        private const val createTableTransport =
+        const val createTableTransport =
             """
                 CREATE TABLE IF NOT EXISTS transport (
                     transportId SERIAL PRIMARY KEY,

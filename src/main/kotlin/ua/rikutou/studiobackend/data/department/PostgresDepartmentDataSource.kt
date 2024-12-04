@@ -2,6 +2,10 @@ package ua.rikutou.studiobackend.data.department
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.rikutou.studiobackend.data.phone.Phone
+import ua.rikutou.studiobackend.data.phone.PostgresPhoneDataSource
+import ua.rikutou.studiobackend.data.phone.PostgresPhoneDataSource.Companion.phoneId
+import ua.rikutou.studiobackend.data.phone.PostgresPhoneDataSource.Companion.phoneNumber
 import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource.Companion.sectionId
 import ua.rikutou.studiobackend.data.section.Section
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
@@ -44,10 +48,13 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             SELECT
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId,
             s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} as sDepId,
-            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState}
+            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState},
+            p.phoneNumber, p.phoneId AS pPhoneId
             FROM ${table} d
             LEFT JOIN ${section.table} s ON d.${departmentId} = s.${section.departmentId}
             LEFT JOIN ${transport.table} t ON d.${departmentId} = t.${transport.departmentId}
+            LEFT JOIN department_phone dp ON d.$departmentId = dp.$departmentId
+            LEFT JOIN phone p ON dp.phoneId = p.phoneId
             WHERE d.studioid = ?
         """
 
@@ -55,11 +62,25 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             SELECT 
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId,
             s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} as sDepId,
-            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState}
+            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState},
+            p.phoneNumber, p.phoneId AS pPhoneId
             FROM ${table} d
             LEFT JOIN ${section.table} s ON d.${departmentId} = s.${section.departmentId}
             LEFT JOIN ${transport.table} t ON d.${departmentId} = t.${transport.departmentId} 
+            LEFT JOIN department_phone dp ON d.$departmentId = dp.$departmentId
+            LEFT JOIN phone p ON dp.phoneId = p.phoneId
             WHERE d.studioid = ? AND $type ILIKE ?
+        """
+
+        private const val createDepartmentToPhoneTable = """
+            CREATE TABLE IF NOT EXISTS department_phone (
+            phoneId INTEGER
+                REFERENCES ${PostgresPhoneDataSource.table} (${PostgresPhoneDataSource.phoneId})
+                ON DELETE CASCADE,
+            $departmentId INTEGER
+                REFERENCES $table ($departmentId)
+                ON DELETE CASCADE
+            )
         """
     }
 
@@ -67,9 +88,21 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         connection
             .createStatement()
             .executeUpdate(createTableDepart)
+
         connection
             .createStatement()
             .executeUpdate(section.createTableSection)
+
+        connection
+            .createStatement()
+            .executeUpdate(transport.createTableTransport)
+
+        connection
+            .createStatement()
+            .executeUpdate(PostgresPhoneDataSource.createTablePhone)
+        connection
+            .createStatement()
+            .executeUpdate(createDepartmentToPhoneTable)
     }
 
     override suspend fun insertUpdateDepartment(department: Department): Int? = withContext(Dispatchers.IO) {
@@ -129,7 +162,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         }
         val result = statement.executeQuery()
 
-        return@withContext mutableMapOf<Department, Pair<MutableSet<Section>, MutableSet<Transport>> >().apply {
+        return@withContext mutableMapOf<Department, DepartmentRelation>().apply {
             while (result.next()) {
                 val dept = Department(
                     departmentId = result.getInt(departmentId),
@@ -161,19 +194,36 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                     )
                 } else null
 
+                val phone = if(result.getString(phoneNumber)?.isNotEmpty() == true) {
+                    Phone(
+                        phoneId = result.getInt("pPhoneId"),
+                        phoneNumber = result.getString(phoneNumber),
+                    )
+                }
+                else null
+
                 if(!containsKey(dept)) {
-                    this[dept] = Pair(mutableSetOf<Section>(),mutableSetOf<Transport>())
+                    this[dept] = DepartmentRelation()
                 }
 
                 section?.let {
-                    this[dept]?.first?.add(it)
+                    this[dept]?.sections?.add(it)
                 }
                 transport?.let {
-                    this[dept]?.second?.add(it)
+                    this[dept]?.transport?.add(it)
+                }
+                phone?.let {
+                    this[dept]?.phones?.add(it)
                 }
 
             }
-        }.map { it.key.copy(sections = it.value.first.toList(), transport = it.value.second.toList()) }
+        }.map {
+            it.key.copy(
+                sections = it.value.sections.toList(),
+                transport = it.value.transport.toList(),
+                phones = it.value.phones.toList()
+            )
+        }
     }
 
     override suspend fun getDepartmentByType(type: String): Department? = withContext(Dispatchers.IO) {
