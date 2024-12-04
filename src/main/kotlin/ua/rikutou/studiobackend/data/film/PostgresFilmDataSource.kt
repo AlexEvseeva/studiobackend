@@ -20,7 +20,7 @@ class PostgresFilmDataSource(private val connection: Connection) : FilmDataSourc
         const val createTableFilm =
             """
                 CREATE TABLE IF NOT EXISTS $table (
-                $filmId INTEGER PRIMARY KEY,
+                $filmId SERIAL PRIMARY KEY,
                 $title TEXT NOT NULL,
                 $genres INTEGER[],
                 $director TEXT NOT NULL,

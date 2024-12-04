@@ -42,10 +42,10 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             SELECT 
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
-            actor_film.role AS roleInFilm
+            af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm
             FROM ${table}
-            LEFT JOIN actor_film ON actor.actorId = actor_film.actorId
-            LEFT JOIN film ON actor_film.filmId = film.filmId
+            LEFT JOIN actor_film af ON actor.actorId = af.actorId
+            LEFT JOIN film ON af.filmId = film.filmId
             WHERE actor.studioId = ?
         """
 
@@ -53,10 +53,10 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             SELECT 
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
-            actor_film.role AS roleInFilm
+            af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm
             FROM ${table}
-            LEFT JOIN actor_film ON actor.actorId = actor_film.actorId
-            LEFT JOIN film ON actor_film.filmId = film.filmId
+            LEFT JOIN actor_film af ON actor.actorId = af.actorId
+            LEFT JOIN film ON af.filmId = film.filmId
             WHERE actor.actorId = ?
             AND ($name ILIKE ? OR $nickName ILIKE ? OR $role ILIKE ?)
         """
@@ -215,10 +215,10 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                     )
                 } else null
 
-                val actorFilm = if(film?.filmId != null && result.getInt(film.filmId) != 0) {
+                val actorFilm = if(result.getString("roleInFilm")?.isNotEmpty() === true) {
                     ActorFilm(
-                        actorId = result.getInt(actorId),
-                        filmId = result.getInt(film.filmId),
+                        actorId = result.getInt("afactorid"),
+                        filmId = result.getInt("affilmid"),
                         role = result.getString("roleInFilm")
                     )
                 } else null

@@ -173,8 +173,6 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         val statement = connection.prepareStatement(sqlString)
 
         statement.setInt(1, studioId)
-        println("--------$sqlString")
-        println("--------$statement")
         val result = statement.executeQuery()
         return@withContext mutableListOf<Location>().apply {
             while(result.next()) {
