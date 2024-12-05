@@ -2,6 +2,10 @@ package ua.rikutou.studiobackend.data.department
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.rikutou.studiobackend.data.email.Email
+import ua.rikutou.studiobackend.data.email.PostgresEmailDataSource
+import ua.rikutou.studiobackend.data.email.PostgresEmailDataSource.Companion.email
+import ua.rikutou.studiobackend.data.email.PostgresEmailDataSource.Companion.emailId
 import ua.rikutou.studiobackend.data.phone.Phone
 import ua.rikutou.studiobackend.data.phone.PostgresPhoneDataSource
 import ua.rikutou.studiobackend.data.phone.PostgresPhoneDataSource.Companion.phoneId
@@ -49,12 +53,15 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId,
             s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} as sDepId,
             t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState},
-            p.phoneNumber, p.phoneId AS pPhoneId
+            p.phoneNumber, p.phoneId AS pPhoneId,
+            email.emailId, email.email
             FROM ${table} d
             LEFT JOIN ${section.table} s ON d.${departmentId} = s.${section.departmentId}
             LEFT JOIN ${transport.table} t ON d.${departmentId} = t.${transport.departmentId}
             LEFT JOIN department_phone dp ON d.$departmentId = dp.$departmentId
             LEFT JOIN phone p ON dp.phoneId = p.phoneId
+            LEFT JOIN department_email de ON d.$departmentId = de.$departmentId
+            LEFT JOIN email ON de.emailId = email.emailId
             WHERE d.studioid = ?
         """
 
@@ -63,12 +70,15 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId,
             s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} as sDepId,
             t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState},
-            p.phoneNumber, p.phoneId AS pPhoneId
+            p.phoneNumber, p.phoneId AS pPhoneId,
+            email.emailId, email.email
             FROM ${table} d
             LEFT JOIN ${section.table} s ON d.${departmentId} = s.${section.departmentId}
             LEFT JOIN ${transport.table} t ON d.${departmentId} = t.${transport.departmentId} 
             LEFT JOIN department_phone dp ON d.$departmentId = dp.$departmentId
             LEFT JOIN phone p ON dp.phoneId = p.phoneId
+            LEFT JOIN department_email de ON d.$departmentId = de.$departmentId
+            LEFT JOIN email ON de.emailId = email.emailId
             WHERE d.studioid = ? AND $type ILIKE ?
         """
 
@@ -76,6 +86,17 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             CREATE TABLE IF NOT EXISTS department_phone (
             phoneId INTEGER
                 REFERENCES ${PostgresPhoneDataSource.table} (${PostgresPhoneDataSource.phoneId})
+                ON DELETE CASCADE,
+            $departmentId INTEGER
+                REFERENCES $table ($departmentId)
+                ON DELETE CASCADE
+            )
+        """
+
+        private const val createDepartmentToEmailTable = """
+            CREATE TABLE IF NOT EXISTS department_email (
+            emailId INTEGER
+                REFERENCES ${PostgresEmailDataSource.table} (${PostgresEmailDataSource.emailId})
                 ON DELETE CASCADE,
             $departmentId INTEGER
                 REFERENCES $table ($departmentId)
@@ -103,6 +124,13 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
         connection
             .createStatement()
             .executeUpdate(createDepartmentToPhoneTable)
+
+        connection
+            .createStatement()
+            .executeUpdate(PostgresEmailDataSource.createTableEmail)
+        connection
+            .createStatement()
+            .executeUpdate(createDepartmentToEmailTable)
     }
 
     override suspend fun insertUpdateDepartment(department: Department): Int? = withContext(Dispatchers.IO) {
@@ -202,6 +230,14 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                 }
                 else null
 
+                val email = if(result.getString(email)?.isNotEmpty() == true) {
+                    Email(
+                        emailId = result.getInt(emailId),
+                        email = result.getString(email),
+                    )
+                }
+                else null
+
                 if(!containsKey(dept)) {
                     this[dept] = DepartmentRelation()
                 }
@@ -215,13 +251,17 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                 phone?.let {
                     this[dept]?.phones?.add(it)
                 }
+                email?.let {
+                    this[dept]?.emails?.add(it)
+                }
 
             }
         }.map {
             it.key.copy(
                 sections = it.value.sections.toList(),
                 transport = it.value.transport.toList(),
-                phones = it.value.phones.toList()
+                phones = it.value.phones.toList(),
+                emails = it.value.emails.toList(),
             )
         }
     }

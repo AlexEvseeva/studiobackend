@@ -4,6 +4,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ua.rikutou.studiobackend.data.film.Film
 import ua.rikutou.studiobackend.data.actorFilm.ActorFilm
+import ua.rikutou.studiobackend.data.email.Email
+import ua.rikutou.studiobackend.data.email.PostgresEmailDataSource
+import ua.rikutou.studiobackend.data.email.PostgresEmailDataSource.Companion.email
+import ua.rikutou.studiobackend.data.email.PostgresEmailDataSource.Companion.emailId
 import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.budget
 import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.date
 import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource.Companion.director
@@ -46,12 +50,15 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
             af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm,
-            p.phoneNumber, p.phoneId AS pPhoneId
+            p.phoneNumber, p.phoneId AS pPhoneId,
+            e.email, e.emailId
             FROM ${table}
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
             LEFT JOIN film ON af.filmId = film.filmId
             LEFT JOIN actor_phone ap ON ap.actorId = actor.actorId
             LEFT JOIN phone p ON ap.phoneId = p.phoneId
+            LEFT JOIN actor_email ON actor.actorId =  actor_email.actorId
+            LEFT JOIN email e ON  actor_email.emailId = e.emailId
             WHERE actor.studioId = ?
         """
 
@@ -60,12 +67,15 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             actor.actorId, actor.name, actor.nickname, actor.role AS actorRole, actor.studioId,
             film.filmId, film.title, film.genres, film.director, film.writer, film.date, film.budget,
             af.actorId AS afactorid, af.filmid as affilmid, af.role AS roleInFilm,
-            p.phoneNumber, p.phoneId AS pPhoneId
+            p.phoneNumber, p.phoneId AS pPhoneId,
+            e.email, e.emailId
             FROM ${table}
             LEFT JOIN actor_film af ON actor.actorId = af.actorId
             LEFT JOIN film ON af.filmId = film.filmId
             LEFT JOIN actor_phone ap ON ap.actorId = actor.actorId
             LEFT JOIN phone p ON ap.phoneId = p.phoneId
+            LEFT JOIN actor_email ON actor.actorId =  actor_email.actorId
+            LEFT JOIN email e ON actor_email.emailId = e.emailId
             WHERE actor.actorId = ?
             AND ($name ILIKE ? OR $nickName ILIKE ? OR $role ILIKE ?)
         """
@@ -83,6 +93,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
             LEFT JOIN phone ON actor_phone.phoneId = phone.phoneId
             WHERE actor.actorId = ?
         """
+
 
         private const val createActorToFilmTable = """
             CREATE TABLE IF NOT EXISTS actor_film (
@@ -106,6 +117,17 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                 ON DELETE CASCADE
             )
         """
+
+        private const val createActorToEmailTable = """
+            CREATE TABLE IF NOT EXISTS actor_email (
+            $actorId INTEGER
+                REFERENCES ${table} (${actorId})
+                ON DELETE CASCADE,
+            emailId INTEGER
+                REFERENCES ${PostgresEmailDataSource.table} (${PostgresEmailDataSource.emailId})
+                ON DELETE CASCADE
+            )
+        """
     }
 
     init {
@@ -122,10 +144,17 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
 
         connection
             .createStatement()
-            .executeUpdate(createActorToPhoneTable)
+            .executeUpdate(PostgresPhoneDataSource.createTablePhone)
         connection
             .createStatement()
-            .executeUpdate(PostgresPhoneDataSource.createTablePhone)
+            .executeUpdate(createActorToPhoneTable)
+
+        connection
+            .createStatement()
+            .executeUpdate(PostgresEmailDataSource.createTableEmail)
+        connection
+            .createStatement()
+            .executeUpdate(createActorToEmailTable)
     }
 
     override suspend fun insertUpdateActors(actor: Actor): Int? = withContext(Dispatchers.IO) {
@@ -265,6 +294,14 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                 }
                 else null
 
+                val email = if (result.getString(email)?.isNotEmpty() == true) {
+                    Email (
+                        emailId = result.getInt(emailId),
+                        email = result.getString(email)
+                    )
+                }
+                else null
+
                 if(!containsKey(actor)) {
                     this[actor] = ActorRelation()
                 }
@@ -278,6 +315,9 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                 phone?.let {
                     this[actor]?.phones?.add(it)
                 }
+                email?.let {
+                    this[actor]?.emails?.add(it)
+                }
             }
 
         }.map {
@@ -285,6 +325,7 @@ class PostgresActorDataSource(private val connection: Connection) : ActorDataSou
                 films = it.value.films.toList(),
                 actorFilms = it.value.actorToFilms.toList(),
                 phones = it.value.phones.toList(),
+                emails = it.value.emails.toList(),
             )
         }
     }
