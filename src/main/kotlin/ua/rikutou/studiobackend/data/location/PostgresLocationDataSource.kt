@@ -99,18 +99,9 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         } else null
     }
 
-    override suspend fun updateLocation(locationId: Int?, studioId: Int?, location: Location?) = withContext(Dispatchers.IO) {
+    override suspend fun updateLocation(location: Location) = withContext(Dispatchers.IO) {
 
-        if (locationId != null && studioId != null) {
-            val statement = connection.prepareStatement(updateLocationStudioId)
-            statement.apply {
-                setInt(1, studioId)
-                setInt(2, locationId)
-            }.executeUpdate()
-            return@withContext
-
-        } else if (location != null) {
-            val statement = connection.prepareStatement(updateLocation)
+        val statement = connection.prepareStatement(updateLocation)
             statement.apply {
                 setString(1, location.name)
                 setString(2, location.address)
@@ -123,7 +114,16 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
             }
             val count = statement.executeUpdate()
             return@withContext
-        }
+
+    }
+
+    override suspend fun updateLocationStdioId(locationId: Int, studioId: Int): Unit = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(updateLocationStudioId)
+            statement.apply {
+                setInt(1, studioId)
+                setInt(2, locationId)
+            }.executeUpdate()
+            return@withContext
     }
 
     override suspend fun getAllLocations(

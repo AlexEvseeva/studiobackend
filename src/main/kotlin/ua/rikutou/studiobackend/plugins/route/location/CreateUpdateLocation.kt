@@ -43,19 +43,10 @@ fun Route.createUpdateLocation() {
                 rentPrice = request.rentPrice,
             )
 
+
             if (location.locationId != null) {
                 locationDataSource.updateLocation(location = location)
-                locationDataSource.getLocationById(location.locationId)?.let {
-                    call.respond(HttpStatusCode.OK, message = it)
-                } ?: run {
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = Error(
-                            code = HttpStatusCode.Conflict.value,
-                            message = "Location update error"
-                        )
-                    )
-                }
+                call.respond(HttpStatusCode.OK, message = location)
 
             } else {
                 val locationId = locationDataSource.insertLocation(location)
