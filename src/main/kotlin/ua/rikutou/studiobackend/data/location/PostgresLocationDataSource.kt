@@ -109,11 +109,12 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
                 setFloat(4, location.length)
                 setFloat(5, location.height)
                 setString(6, location.type)
-                setFloat(8, location.rentPrice)
-                setInt(7, location.locationId ?: -1)
+                setFloat(7, location.rentPrice)
+                setInt(8, location.locationId ?: -1)
             }
-            val count = statement.executeUpdate()
-            return@withContext
+
+            statement.executeUpdate()
+        return@withContext
 
     }
 
