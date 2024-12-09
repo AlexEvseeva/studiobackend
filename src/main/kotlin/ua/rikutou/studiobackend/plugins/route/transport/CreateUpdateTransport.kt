@@ -39,7 +39,8 @@ fun Route.createUpdateTransport() {
                 seats = request.seats,
                 departmentId = request.departmentId,
                 color = request.color,
-                technicalState = request.technicalState
+                technicalState = request.technicalState,
+                rentPrice = request.rentPrice
             )
             val id = transportDataSource.insertUpdateTransport(transport = transport)
             call.respond(

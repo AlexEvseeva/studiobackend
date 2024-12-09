@@ -14,6 +14,7 @@ data class Transport(
     val departmentId: Int,
     val color: String,
     val technicalState: String,
+    val rentPrice: Float
 )
 
 @Serializable

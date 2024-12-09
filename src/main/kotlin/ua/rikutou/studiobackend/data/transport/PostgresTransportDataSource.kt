@@ -19,6 +19,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
         const val departmentId = "departmentId"
         const val color = "color"
         const val technicalState = "technicalState"
+        const val rentPrice = "rentPrice"
 
         const val createTableTransport =
             """
@@ -31,15 +32,16 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                     departmentId INTEGER REFERENCES ${PostgresDepartmentDataSource.table} (${PostgresDepartmentDataSource.departmentId}) 
                             ON DELETE CASCADE,
                     color VARCHAR(100),
-                    technicalState VARCHAR(200)
+                    technicalState VARCHAR(200),
+                    rentPrice FLOAT NOT NULL
                 )
             """
-        private const val insertTransport = "INSERT INTO transport (type, mark, manufactureDate, seats, departmentId, color, technicalState) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        private const val updateTransport = "UPDATE transport SET type = ?, mark = ?, manufactureDate = ?, seats = ?, departmentId = ?, color = ?, technicalState = ? WHERE transportId = ?"
+        private const val insertTransport = "INSERT INTO transport (type, mark, manufactureDate, seats, departmentId, color, technicalState, rentPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        private const val updateTransport = "UPDATE transport SET type = ?, mark = ?, manufactureDate = ?, seats = ?, departmentId = ?, color = ?, technicalState = ?, rentPrice = ? WHERE transportId = ?"
         private const val getTransportById = "SELECT * FROM transport WHERE transportId = ?"
         private const val getAllTransport =
             """
-                SELECT t.transportid, t.type AS ttype, t.mark, t.manufacturedate, t.seats, t.departmentid, t.color, t.technicalstate,
+                SELECT t.transportid, t.type AS ttype, t.mark, t.manufacturedate, t.seats, t.departmentid, t.color, t.technicalstate, t.rentPrice,
                        d.studioid
                 FROM transport t
                 LEFT JOIN department d ON t.departmentid = d.departmentid
@@ -64,7 +66,8 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                 setInt(5, transport.departmentId)
                 setString(6, transport.color)
                 setString(7, transport.technicalState)
-                setInt(8, transport.transportId)
+                setFloat(8, transport.rentPrice)
+                setInt(9, transport.transportId)
             }
         } else {
             connection.prepareStatement(insertTransport, Statement.RETURN_GENERATED_KEYS).apply {
@@ -75,6 +78,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                 setInt(5, transport.departmentId)
                 setString(6, transport.color)
                 setString(7, transport.technicalState)
+                setFloat(8, transport.rentPrice)
             }
         }
         statement.executeUpdate()
@@ -103,6 +107,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                 departmentId = result.getInt("departmentId"),
                 color = result.getString("color"),
                 technicalState = result.getString("technicalState"),
+                rentPrice = result.getFloat("rentPrice")
             )
         } else null
     }
@@ -177,6 +182,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                         departmentId = result.getInt("departmentId"),
                         color = result.getString("color"),
                         technicalState = result.getString("technicalState"),
+                        rentPrice = result.getFloat("rentPrice")
                     )
                 )
             }

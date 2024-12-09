@@ -52,7 +52,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             SELECT
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId,
             s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} as sDepId,
-            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState},
+            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState}, t.${transport.rentPrice},
             p.phoneNumber, p.phoneId AS pPhoneId,
             email.emailId, email.email
             FROM ${table} d
@@ -69,7 +69,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
             SELECT 
             d.$departmentId, d.$type, d.$workHours, d.$contactPerson, d.$studioId,
             s.${section.sectionId}, s.${section.title}, s.${section.address}, s.${section.internalPhoneNumber}, s.${section.departmentId} as sDepId,
-            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState},
+            t.${transport.transportId}, t.${transport.type} AS transportType, t.${transport.mark}, t.${transport.manufactureDate} ,t.${transport.seats}, t.${transport.departmentId} as tDepId, t.${transport.color}, t.${transport.technicalState}, t.${transport.rentPrice},
             p.phoneNumber, p.phoneId AS pPhoneId,
             email.emailId, email.email
             FROM ${table} d
@@ -219,6 +219,7 @@ class PostgresDepartmentDataSource(private val connection: Connection) : Departm
                         departmentId = result.getInt("tdepid"),
                         color = result.getString(transport.color),
                         technicalState = result.getString(transport.technicalState),
+                        rentPrice = result.getFloat(transport.rentPrice),
                     )
                 } else null
 
