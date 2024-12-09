@@ -2,6 +2,7 @@ package ua.rikutou.studiobackend.data.statistic
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.postgresql.util.PSQLException
 import ua.rikutou.studiobackend.data.actor.Actor
 import ua.rikutou.studiobackend.data.actor.PostgresActorDataSource.Companion.actorId
 import ua.rikutou.studiobackend.data.actor.PostgresActorDataSource.Companion.name
@@ -28,7 +29,7 @@ class PostgresStatisticDataSource(val connection: Connection) : StatisticDataSou
         private const val minAvgMaxLocation = """
             select min(c) as mi, avg(c) as a, max(c) as ma  FROM (
             select count(*) as c
-            from document where
+            from document
             left join documenttolocation on document.documentid = documenttolocation.documentid
             left join location on documenttolocation.locationid = location.locationid
             where document.studioid = ? AND document.datestart between ? AND ?
@@ -247,6 +248,7 @@ class PostgresStatisticDataSource(val connection: Connection) : StatisticDataSou
         val quantityStatement = connection.prepareStatement(quantityOfDocuments)
         quantityStatement.setInt(1, studioId)
         val quantity = quantityStatement.executeQuery()
+        quantity.next()
         statistic = statistic.copy(
             documentsTotal = quantity.getInt("total")
         )
@@ -335,17 +337,18 @@ class PostgresStatisticDataSource(val connection: Connection) : StatisticDataSou
             setDate(2,Date(endOfYear))
         }
         val popularActor = popularActorStatement.executeQuery()
-        popularActor.next()
-        statistic = statistic.copy(
-            mostPopularActor = Actor(
-                actorId = popularActor.getInt(actorId),
-                name = popularActor.getString(name),
-                nickName = popularActor.getString(nickName),
-                role = popularActor.getString(role),
-                studioId = popularActor.getInt(studioId)
+        val success = popularActor.next()
+        if(success) {
+            statistic = statistic.copy(
+                mostPopularActor = Actor(
+                    actorId = popularActor.getInt(actorId),
+                    name = popularActor.getString(name),
+                    nickName = popularActor.getString(nickName),
+                    role = popularActor.getString(role),
+                    studioId = popularActor.getInt(studioId)
+                )
             )
-        )
-
+        }
         return@withContext statistic
     }
 }
