@@ -14,6 +14,8 @@ import ua.rikutou.studiobackend.data.film.PostgresFilmDataSource
 import ua.rikutou.studiobackend.data.user.PostgresUserDataSource
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import ua.rikutou.studiobackend.data.studio.StudioDataSource
+import ua.rikutou.studiobackend.data.document.DocumentDateSource
+import ua.rikutou.studiobackend.data.document.PostgresDataSourceDocument
 import ua.rikutou.studiobackend.data.user.UserDataSource
 import ua.rikutou.studiobackend.data.section.PostgresSectionDataSource
 import ua.rikutou.studiobackend.data.location.LocationDataSource
@@ -56,6 +58,7 @@ fun appModule(
     singleOf(::PostgresTransportDataSource) {bind<TransportDataSource>() }
     singleOf(::PostgresActorDataSource) { bind<ActorDataSource>() }
     singleOf(::PostgresFilmDataSource) { bind<FilmDataSource>() }
+    singleOf(::PostgresDataSourceDocument) { bind<DocumentDateSource>() }
 
     single<TokenConfig> {
         TokenConfig(

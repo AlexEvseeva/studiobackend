@@ -14,6 +14,7 @@ import ua.rikutou.studiobackend.plugins.route.department.createUpdateDepartment
 import ua.rikutou.studiobackend.plugins.route.department.deleteDepartment
 import ua.rikutou.studiobackend.plugins.route.department.getAllDepartments
 import ua.rikutou.studiobackend.plugins.route.department.getDepartmentById
+import ua.rikutou.studiobackend.plugins.route.document.createDocument
 import ua.rikutou.studiobackend.plugins.route.equipment.createUpdateEquipment
 import ua.rikutou.studiobackend.plugins.route.equipment.deleteEquipment
 import ua.rikutou.studiobackend.plugins.route.equipment.getAllEquipment
@@ -93,6 +94,8 @@ fun Application.configureRouting() {
         getUsersByStudioIdAndCandidates()
         deleteUser()
         updateUserStudio()
+
+        createDocument()
 
         executeQuery()
     }
