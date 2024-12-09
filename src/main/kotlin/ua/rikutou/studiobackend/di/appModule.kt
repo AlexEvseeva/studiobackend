@@ -28,6 +28,8 @@ import ua.rikutou.studiobackend.data.execute.ExecuteDataSource
 import ua.rikutou.studiobackend.data.execute.PostgresExecuteDataSource
 import ua.rikutou.studiobackend.data.film.FilmDataSource
 import ua.rikutou.studiobackend.data.transport.TransportDataSource
+import ua.rikutou.studiobackend.data.statistic.StatisticDataSource
+import ua.rikutou.studiobackend.data.statistic.PostgresStatisticDataSource
 import ua.rikutou.studiobackend.security.token.TokenConfig
 import ua.rikutou.studiobackend.security.token.TokenService
 import ua.rikutou.studiobackend.security.token.JwtTokenService
@@ -59,6 +61,7 @@ fun appModule(
     singleOf(::PostgresActorDataSource) { bind<ActorDataSource>() }
     singleOf(::PostgresFilmDataSource) { bind<FilmDataSource>() }
     singleOf(::PostgresDataSourceDocument) { bind<DocumentDateSource>() }
+    singleOf(::PostgresStatisticDataSource) { bind<StatisticDataSource>() }
 
     single<TokenConfig> {
         TokenConfig(

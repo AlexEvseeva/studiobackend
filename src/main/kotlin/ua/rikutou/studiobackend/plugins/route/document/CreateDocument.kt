@@ -32,6 +32,7 @@ fun Route.createDocument() {
             val document = Document(
                 dateStart = request.dateStart,
                 days = request.days,
+                studioId = request.studioId
             )
             val id = documentDataSource.insertDocument(
                 document = document,

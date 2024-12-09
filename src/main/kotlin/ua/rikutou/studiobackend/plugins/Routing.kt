@@ -31,6 +31,7 @@ import ua.rikutou.studiobackend.plugins.route.section.createUpdateSection
 import ua.rikutou.studiobackend.plugins.route.section.deleteSection
 import ua.rikutou.studiobackend.plugins.route.section.getAllSections
 import ua.rikutou.studiobackend.plugins.route.section.getSectionById
+import ua.rikutou.studiobackend.plugins.route.statistic.getStatistic
 import ua.rikutou.studiobackend.plugins.route.studio.createUpdateStudio
 import ua.rikutou.studiobackend.plugins.route.studio.deleteStudio
 import ua.rikutou.studiobackend.plugins.route.studio.getStudio
@@ -96,6 +97,7 @@ fun Application.configureRouting() {
         updateUserStudio()
 
         createDocument()
+        getStatistic()
 
         executeQuery()
     }

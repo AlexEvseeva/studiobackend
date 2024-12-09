@@ -8,13 +8,13 @@ import java.sql.Statement
 
 class PostgresEquipmentDataSource(private val connection: Connection) : EquipmentDataSource {
     companion object {
-        private const val table = "equipment"
-        private const val eId = "equipmentId"
-        private const val name = "name"
-        private const val type = "type"
-        private const val comment = "comment"
-        private const val rentPrice = "rentPrice"
-        private const val sId = "studioId"
+        const val table = "equipment"
+        const val eId = "equipmentId"
+        const val name = "name"
+        const val type = "type"
+        const val comment = "comment"
+        const val rentPrice = "rentPrice"
+        const val sId = "studioId"
 
         private const val createTableEquipment =
             """

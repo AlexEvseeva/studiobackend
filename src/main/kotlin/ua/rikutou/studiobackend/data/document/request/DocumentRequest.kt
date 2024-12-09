@@ -9,4 +9,5 @@ data class DocumentRequest(
     val locations: List<Int>,
     val transport: List<Int>,
     val equipment: List<Int>,
+    val studioId: Int
 )

@@ -9,7 +9,14 @@ import java.sql.Statement
 
 class PostgresDataSourceDocument(private val connection: Connection) : DocumentDateSource {
     companion object {
-        private const val createTableDocument = "CREATE TABLE IF NOT EXISTS document (documentId SERIAL PRIMARY KEY, dateStart DATE, days INTEGER)"
+        private const val createTableDocument = """
+            CREATE TABLE IF NOT EXISTS document (
+                documentId SERIAL PRIMARY KEY, 
+                dateStart DATE, 
+                days INTEGER, 
+                studioId INTEGER REFERENCES studio (studioId) ON DELETE CASCADE 
+            )
+        """
         private const val createTableDocumentToLocation =
             """
                 CREATE TABLE IF NOT EXISTS documentToLocation (

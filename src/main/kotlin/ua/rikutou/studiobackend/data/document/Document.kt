@@ -7,4 +7,5 @@ data class Document(
     val documentId: Int? = null,
     val dateStart: Long,
     val days: Int,
+    val studioId: Int
 )
