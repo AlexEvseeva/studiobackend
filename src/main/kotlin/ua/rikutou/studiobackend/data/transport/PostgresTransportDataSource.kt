@@ -135,7 +135,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                         append(" AND (mark ILIKE '%$it%' OR color ILIKE '%$it%' OR technicalState ILIKE '%$it%') ")
                     }
                     type?.let {
-                        append(" AND (t.type = $it) ")
+                        append(" AND (t.type = ${it.fromTransportType()}) ")
                     }
                     when {
                         manufactureDateFrom != null && manufactureDateTo != null -> {
