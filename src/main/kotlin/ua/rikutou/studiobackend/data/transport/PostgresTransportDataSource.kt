@@ -46,8 +46,30 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                 FROM transport t
                 LEFT JOIN department d ON t.departmentid = d.departmentid
                 WHERE d.studioid = ?
+                AND case
+                    when ?::date is not null AND ?::date is not null then (manufacturedate between ?::date AND ?::date)
+                    when ?::date is not null AND ?::date is null then (manufacturedate >= ?::date)
+                    when ?::date is null and ?::date is not null then (manufacturedate <= ?::date)
+                    else true
+                end
+
+                AND case
+                    when ? is not null then mark ILIKE ? OR color ILIKE ? OR technicalstate ILIKE ?
+                    else true
+                END
+                
+                AND case
+                    when ?::integer is not null AND ?::integer > 0 THEN t.type = ?::integer
+                    else true
+                END
+                
+                AND case
+                    when ?::integer > 0 AND ?::integer > 0 THEN seats BETWEEN ?::integer AND ?::integer
+                    when ?::integer > 0 AND ?::integer < 0 THEN  seats >= ?::integer
+                    when ?::integer < 0 AND ?::integer > 0 THEN  seats <= ?::integer
+                    else true
+                END
             """
-//        private const val getAllTransportFiltered = "SELECT * FROM transport WHERE departmentId = ? AND (type ILIKE ? OR mark ILIKE ? OR manufactureDate ILIKE ? OR seats ILIKE ? OR color ILIKE ? OR technicalState ILIKE ?))"
         private const val deleteTransport = "DELETE FROM transport WHERE transportId = ?"
     }
 
@@ -122,52 +144,44 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
         seatsTo: Int?
     ): List<Transport> = withContext(Dispatchers.IO) {
 
-        val filterParams = if(search?.isNotEmpty() == true
-            || type != null
-            || manufactureDateFrom != null
-            || manufactureDateTo != null
-            || seatsFrom != null
-            || seatsTo != null
-            ) {
-            val formater = SimpleDateFormat("YYYY-MM-dd")
-                StringBuilder().apply {
-                    search?.let {
-                        append(" AND (mark ILIKE '%$it%' OR color ILIKE '%$it%' OR technicalState ILIKE '%$it%') ")
-                    }
-                    type?.let {
-                        append(" AND (t.type = ${it.fromTransportType()}) ")
-                    }
-                    when {
-                        manufactureDateFrom != null && manufactureDateTo != null -> {
-                            append(" AND ( manufacturedate BETWEEN '${formater.format(manufactureDateFrom)}' AND '${formater.format(manufactureDateTo)}' )")
-                        }
-                        manufactureDateFrom != null && manufactureDateTo == null -> {
-                            append(" AND ( manufacturedate >= '${formater.format(manufactureDateFrom)}' ) ")
-                        }
-                        manufactureDateFrom == null && manufactureDateTo != null -> {
-                            append(" AND ( manufacturedate <= '${formater.format(manufactureDateTo)}' )")
-                        }
-                    }
-                    when {
-                        seatsFrom != null && seatsTo != null -> {
-                            append(" AND ( seats BETWEEN $seatsFrom AND $seatsTo )")
-                        }
-                        seatsFrom != null && seatsTo == null -> {
-                            append(" AND ( seats >= $seatsFrom) ")
-                        }
-                        seatsFrom == null && seatsTo != null -> {
-                            append(" AND ( seats <= $seatsTo )")
-                        }
-                    }
-                }
+        val statement = connection.prepareStatement(getAllTransport).apply {
+            setInt(1, studioId)
 
-        } else null
+            setDate(2, manufactureDateFrom?.let { Date(it) })
+            setDate(3, manufactureDateTo?.let { Date(it) })
+            setDate(4, manufactureDateFrom?.let { Date(it) })
+            setDate(5, manufactureDateTo?.let { Date(it) })
 
-        val sqlString = filterParams?.let { "$getAllTransport $it" } ?: getAllTransport
+            setDate(6, manufactureDateFrom?.let { Date(it) })
+            setDate(7, manufactureDateTo?.let { Date(it) })
+            setDate(8, manufactureDateFrom?.let { Date(it) })
 
+            setDate(9, manufactureDateFrom?.let { Date(it) })
+            setDate(10, manufactureDateTo?.let { Date(it) })
+            setDate(11, manufactureDateTo?.let { Date(it) })
 
-        val statement = connection.prepareStatement(sqlString)
-        statement.setInt(1, studioId)
+            setString(12, search)
+            setString(13, "%$search%")
+            setString(14, "%$search%")
+            setString(15, "%$search%")
+
+            setInt(16, type?.fromTransportType() ?: -1)
+            setInt(17, type?.fromTransportType() ?: -1)
+            setInt(18, type?.fromTransportType() ?: -1)
+
+            setInt(19, seatsFrom ?: -1)
+            setInt(20, seatsTo ?: -1)
+            setInt(21, seatsFrom ?: -1)
+            setInt(22, seatsTo ?: -1)
+
+            setInt(23, seatsFrom ?: -1)
+            setInt(24, seatsTo ?: -1)
+            setInt(25, seatsFrom ?: -1)
+
+            setInt(26, seatsFrom ?: -1)
+            setInt(27, seatsTo ?: -1)
+            setInt(28, seatsTo ?: -1)
+        }
 
         val result = statement.executeQuery()
         return@withContext mutableListOf<Transport>().apply {

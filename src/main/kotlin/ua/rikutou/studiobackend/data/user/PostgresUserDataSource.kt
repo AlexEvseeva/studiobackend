@@ -47,7 +47,6 @@ class PostgresUserDataSource(private val connection: Connection) : UserDataSourc
 
 
         return@withContext if(result.next()) {
-            println("studioId: ${ result.getInt("studioId")}")
             User(
                 userId = result.getInt("userId"),
                 name = result.getString("name"),

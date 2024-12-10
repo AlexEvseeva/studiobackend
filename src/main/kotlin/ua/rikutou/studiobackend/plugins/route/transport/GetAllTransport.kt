@@ -27,7 +27,7 @@ fun Route.getAllTransport() {
             val search = call.parameters["search"]
             val type = call.runCatching { parameters["type"]?.toInt()?.toTransportType() }.getOrNull()
             val manufactureDateFrom = call.runCatching { parameters["manufactureDateFrom"]?.toLong() }.getOrNull()
-            val manufactureDateTo = call.runCatching { parameters["manufactureDateFrom"]?.toLong() }.getOrNull()
+            val manufactureDateTo = call.runCatching { parameters["manufactureDateTo"]?.toLong() }.getOrNull()
             val seatsFrom = call.runCatching { parameters["seatsFrom"]?.toInt() }.getOrNull()
             val seatsTo = call.runCatching { parameters["seatsTo"]?.toInt() }.getOrNull()
 

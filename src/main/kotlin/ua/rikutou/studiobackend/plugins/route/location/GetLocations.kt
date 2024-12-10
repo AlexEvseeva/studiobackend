@@ -37,8 +37,6 @@ fun Route.getLocations() {
             val heightFrom = call.runCatching { parameters["heightFrom"]?.toInt() }.getOrNull()
             val heightTo = call.runCatching { parameters["heightTo"]?.toInt() }.getOrNull()
 
-            println("------ s: $search, type: $type, wf: $widthFrom, wt: $widthTo, lf: $lengthFrom, lt: $lengthTo, hf: $heightFrom, ht: $heightTo")
-
             val locations = locationDataSource
                 .getAllLocations(
                     studioId = studioId,
