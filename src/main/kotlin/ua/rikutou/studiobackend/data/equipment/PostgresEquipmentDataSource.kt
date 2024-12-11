@@ -21,7 +21,7 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
                 CREATE TABLE IF NOT EXISTS $table (
                     $eId SERIAL PRIMARY KEY,
                     $name VARCHAR(100),
-                    $type VARCHAR(100),
+                    $type INTEGER,
                     $comment VARCHAR(300),
                     $rentPrice FLOAT,
                     $sId INTEGER
@@ -49,7 +49,7 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
             connection.prepareStatement(updateEquipment).apply {
                 setInt(1, equipment.studioId)
                 setString(2, equipment.name)
-                setString(3, equipment.type)
+                setInt(3, equipment.type.toDb())
                 setString(4, equipment.comment)
                 setFloat(5, equipment.rentPrice)
                 setInt(6, equipment.equipmentId)
@@ -57,7 +57,7 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
         } else {
             connection.prepareStatement(insertEquipment, Statement.RETURN_GENERATED_KEYS).apply {
                 setString(1, equipment.name)
-                setString(2, equipment.type)
+                setInt(2, equipment.type.toDb())
                 setString(3, equipment.comment)
                 setFloat(4, equipment.rentPrice)
                 setInt(5, equipment.studioId)
@@ -81,7 +81,7 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
             Equipment (
                 equipmentId = result.getInt(eId),
                 name = result.getString(Companion.name),
-                type = result.getString(type),
+                type = result.getInt(type).toEquipmentType(),
                 comment = result.getString(comment),
                 rentPrice = result.getFloat(rentPrice),
                 studioId = result.getInt(sId),
@@ -98,7 +98,7 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
             Equipment(
                 equipmentId = result.getInt(eId),
                 name = result.getString(name),
-                type = result.getString(type),
+                type = result.getInt(type).toEquipmentType(),
                 comment = result.getString(comment),
                 rentPrice = result.getFloat(rentPrice),
                 studioId = result.getInt(sId),
@@ -122,7 +122,7 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
                     Equipment(
                         equipmentId = result.getInt(eId),
                         name = result.getString(name),
-                        type = result.getString(type),
+                        type = result.getInt(type).toEquipmentType(),
                         comment = result.getString(comment),
                         rentPrice = result.getFloat(rentPrice),
                         studioId = result.getInt(PostgresEquipmentDataSource.sId),

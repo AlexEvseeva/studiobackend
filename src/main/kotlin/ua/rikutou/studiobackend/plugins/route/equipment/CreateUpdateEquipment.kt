@@ -10,6 +10,7 @@ import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.equipment.Equipment
 import ua.rikutou.studiobackend.data.equipment.EquipmentDataSource
 import ua.rikutou.studiobackend.data.equipment.requests.EquipmentRequest
+import ua.rikutou.studiobackend.data.equipment.toEquipmentType
 
 fun Route.createUpdateEquipment() {
     authenticate {
@@ -32,7 +33,7 @@ fun Route.createUpdateEquipment() {
             val equipment = Equipment(
                 equipmentId = request.equipmentId,
                 name = request.name,
-                type = request.type,
+                type = request.type.toEquipmentType(),
                 comment = request.comment,
                 rentPrice = request.rentPrice,
                 studioId = request.studioId,

@@ -17,6 +17,7 @@ import ua.rikutou.studiobackend.data.equipment.PostgresEquipmentDataSource.Compa
 import ua.rikutou.studiobackend.data.equipment.PostgresEquipmentDataSource.Companion.rentPrice
 import ua.rikutou.studiobackend.data.equipment.PostgresEquipmentDataSource.Companion.sId
 import ua.rikutou.studiobackend.data.equipment.PostgresEquipmentDataSource.Companion.type
+import ua.rikutou.studiobackend.data.equipment.toEquipmentType
 import ua.rikutou.studiobackend.data.location.Location
 import ua.rikutou.studiobackend.data.transport.Transport
 import ua.rikutou.studiobackend.data.transport.toTransportType
@@ -321,7 +322,7 @@ class PostgresStatisticDataSource(val connection: Connection) : StatisticDataSou
                         Equipment(
                             equipmentId = popularEquipmentList.getInt(eId),
                             name = popularEquipmentList.getString(PostgresEquipmentDataSource.name),
-                            type = popularEquipmentList.getString(type),
+                            type = popularEquipmentList.getInt(type).toEquipmentType(),
                             comment = popularEquipmentList.getString(comment),
                             rentPrice = popularEquipmentList.getFloat(rentPrice),
                             studioId = popularEquipmentList.getInt(sId),

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class Equipment(
     val equipmentId: Int? = null,
     val name: String,
-    val type : String,
+    val type : EquipmentType,
     val comment: String,
     val rentPrice: Float,
     val studioId: Int,
