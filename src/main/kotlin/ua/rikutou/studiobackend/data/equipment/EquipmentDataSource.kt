@@ -4,6 +4,6 @@ interface EquipmentDataSource {
     suspend fun insertUpdateEquipment(equipment: Equipment): Int?
     suspend fun getEquipmentByName(name: String): Equipment?
     suspend fun getEquipmentById(equipmentId: Int): Equipment?
-    suspend fun getAllEquipment(studioId: Int, search: String?): List<Equipment>
+    suspend fun getAllEquipment(studioId: Int, search: String? = null, equipmentType: EquipmentType? = null): List<Equipment>
     suspend fun deleteById(equipmentId: Int)
 }

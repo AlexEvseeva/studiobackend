@@ -7,6 +7,8 @@ import io.ktor.server.response.*
 import org.koin.ktor.ext.inject
 import ua.rikutou.studiobackend.data.Error
 import ua.rikutou.studiobackend.data.equipment.EquipmentDataSource
+import ua.rikutou.studiobackend.data.equipment.toEquipmentType
+import ua.rikutou.studiobackend.data.transport.toTransportType
 
 fun Route.getAllEquipment() {
     authenticate {
@@ -25,8 +27,9 @@ fun Route.getAllEquipment() {
             }
 
             val search = call.parameters["search"]
+            val type = call.runCatching { parameters["type"]?.toInt()?.toEquipmentType() }.getOrNull()
 
-            val equipment = equipmentDataSource.getAllEquipment(studioId = studioId, search = search)
+            val equipment = equipmentDataSource.getAllEquipment(studioId = studioId, search = search, equipmentType = type)
             if (equipment.isEmpty()) {
                 call.respond(
                     status = HttpStatusCode.NotFound,

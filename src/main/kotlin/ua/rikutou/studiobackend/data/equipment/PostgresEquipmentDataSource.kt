@@ -32,10 +32,22 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
         private const val insertEquipment = "INSERT INTO $table ($name, $type, $comment, $rentPrice, $sId) VALUES (?, ?, ?, ?, ?)"
         private const val updateEquipment = "UPDATE $table SET $sId = ?, $name = ?, $type = ?, $comment = ?, $rentPrice = ? WHERE $eId = ?"
         private const val delterEquipment = "DELETE FROM $table WHERE $eId = ?"
-        private const val getAllEquipment = "SELECT * FROM $table WHERE $sId = ?"
+        private const val getAllEquipment = """
+            SELECT * FROM $table 
+            WHERE $sId = ?
+            
+            AND case
+                when ? is not null THEN $name ILIKE ? OR $comment ILIKE ?
+                else true
+            END
+            
+            AND case
+                when ? > 0 THEN $type = ?
+                else true
+            END
+        """
         private const val getEquipmentById = "SELECT * FROM $table WHERE $eId = ?"
         private const val getEquipmentByName = "SELECT * FROM $table WHERE $name ILIKE ? LIMIT 1"
-        private const val getEquipmentsFiltered = "SELECT * FROM $table WHERE $sId = ? AND $name ILIKE ?"
     }
 
     init {
@@ -106,14 +118,17 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
         } else null
     }
 
-    override suspend fun getAllEquipment(studioId: Int, search: String?): List<Equipment> = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(search?.let {
-            getEquipmentsFiltered
-        } ?: getAllEquipment)
-        statement.setInt(1, studioId)
-        search?.let {
-            statement.setString(2, "%$it%")
+    override suspend fun getAllEquipment(studioId: Int, search: String?, equipmentType: EquipmentType?): List<Equipment> = withContext(Dispatchers.IO) {
+        val statement = connection.prepareStatement(getAllEquipment).apply {
+            setInt(1, studioId)
+            setString(2, search)
+            setString(3,"%$search%")
+            setString(4,"%$search%")
+            setInt(5, equipmentType?.toDb() ?: -1)
+            setInt(6, equipmentType?.toDb() ?: -1)
         }
+
+        println("-------> $statement")
 
         val result = statement.executeQuery()
         return@withContext mutableListOf<Equipment>().apply {
