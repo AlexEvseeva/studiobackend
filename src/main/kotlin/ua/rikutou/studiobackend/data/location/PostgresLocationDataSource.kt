@@ -4,7 +4,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import java.sql.Connection
+import java.sql.Date
 import java.sql.Statement
+import java.util.*
 
 class PostgresLocationDataSource(private val connection: Connection) : LocationDataSource {
     companion object {
@@ -28,9 +30,17 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
         private const val getLocationByName = "SELECT * FROM location WHERE name = ?"
         private const val getLocationById = "SELECT * FROM location WHERE locationId = ?"
         private const val updateLocationStudioId = "UPDATE location SET studioId = ? WHERE locationId = ?"
-        private const val getAllLocations = "SELECT * FROM location WHERE studioId = ?"
+        private const val getAllLocations = """
+               SELECT * FROM location
+               left join documenttolocation dl on location.locationid = dl.locationid
+               left join public.document d on dl.documentid = d.documentid
+               where d.dateend < ?
+               or dl.locationid is null
+               and location.studioid = ?
+               and location.deleted is null
+        """
         private const val updateLocation = "UPDATE location SET name = ?, address = ?, width = ?, length = ?, height = ?, type = ?,rentPrice = ? WHERE locationId = ?"
-        private const val deleteLocation = "DELETE FROM location WHERE locationId = ?"
+        private const val deleteLocation = "UPDATE location SET deleted = 1 WHERE locationId = ?"
     }
 
     init {
@@ -173,7 +183,8 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
 
         val statement = connection.prepareStatement(sqlString)
 
-        statement.setInt(1, studioId)
+        statement.setDate(1, Date(Date().time))
+        statement.setInt(2, studioId)
         val result = statement.executeQuery()
         return@withContext mutableListOf<Location>().apply {
             while(result.next()) {
@@ -197,6 +208,6 @@ class PostgresLocationDataSource(private val connection: Connection) : LocationD
     override suspend fun deleteById(locationId: Int): Unit = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(deleteLocation)
         statement.setInt(1, locationId)
-        statement.execute()
+        statement.executeUpdate()
     }
 }

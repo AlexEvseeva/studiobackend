@@ -6,6 +6,7 @@ import ua.rikutou.studiobackend.data.document.request.DocumentRequest
 import java.sql.Connection
 import java.sql.Date
 import java.sql.Statement
+import java.util.*
 
 class PostgresDataSourceDocument(private val connection: Connection) : DocumentDateSource {
     companion object {
@@ -13,6 +14,7 @@ class PostgresDataSourceDocument(private val connection: Connection) : DocumentD
             CREATE TABLE IF NOT EXISTS document (
                 documentId SERIAL PRIMARY KEY, 
                 dateStart DATE, 
+                dateEnd DATE,
                 days INTEGER, 
                 studioId INTEGER REFERENCES studio (studioId) ON DELETE CASCADE 
             )
@@ -46,8 +48,8 @@ class PostgresDataSourceDocument(private val connection: Connection) : DocumentD
             """
 
         private const val insertDocument = """
-            INSERT INTO document (dateStart, days)
-            VALUES (?, ?)
+            INSERT INTO document (dateStart, dateEnd, days)
+            VALUES (?, ?, ?)
         """
 
         private const val insertDocumentToLocation = """
@@ -86,8 +88,14 @@ class PostgresDataSourceDocument(private val connection: Connection) : DocumentD
         val statementEquipment = connection.prepareStatement(insertDocumentToEquipment)
         val statementDocument = connection.prepareStatement(insertDocument, Statement.RETURN_GENERATED_KEYS)
         statementDocument.apply {
+            val dateStart = Date(document.dateStart)
+            val calendar = Calendar.getInstance()
+            calendar.time = dateStart
+            calendar.add(Calendar.DAY_OF_MONTH, document.days)
+            val dateEnd = calendar.time
             setDate(1, Date(document.dateStart))
-            setInt(2, document.days)
+            setDate(2, Date(dateEnd.time))
+            setInt(3, document.days)
         }.executeUpdate()
 
         val id = if(statementDocument.generatedKeys.next()) {

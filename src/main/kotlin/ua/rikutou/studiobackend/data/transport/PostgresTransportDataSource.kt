@@ -44,8 +44,14 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                 SELECT t.transportid, t.type AS ttype, t.mark, t.manufacturedate, t.seats, t.departmentid, t.color, t.technicalstate, t.rentPrice,
                        d.studioid
                 FROM transport t
-                LEFT JOIN department d ON t.departmentid = d.departmentid
-                WHERE d.studioid = ?
+                left join documenttotransport dt on t.transportid = dt.transportid
+                left join document d on d.documentid = dt.documentid
+                LEFT JOIN department dep ON t.departmentid = dep.departmentid
+                where d.dateend < ?
+                or dt.transportid is null
+                and dep.studioid = ?
+                and t.deleted is null
+                
                 AND case
                     when ?::date is not null AND ?::date is not null then (manufacturedate between ?::date AND ?::date)
                     when ?::date is not null AND ?::date is null then (manufacturedate >= ?::date)
@@ -70,7 +76,7 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
                     else true
                 END
             """
-        private const val deleteTransport = "DELETE FROM transport WHERE transportId = ?"
+        private const val deleteTransport = "UPDATE transport SET deleted = 1 WHERE transportId = ?"
     }
 
     init {
@@ -145,42 +151,44 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
     ): List<Transport> = withContext(Dispatchers.IO) {
 
         val statement = connection.prepareStatement(getAllTransport).apply {
-            setInt(1, studioId)
 
-            setDate(2, manufactureDateFrom?.let { Date(it) })
-            setDate(3, manufactureDateTo?.let { Date(it) })
-            setDate(4, manufactureDateFrom?.let { Date(it) })
-            setDate(5, manufactureDateTo?.let { Date(it) })
+            setDate(1, Date(java.util.Date().time))
+            setInt(2, studioId)
 
-            setDate(6, manufactureDateFrom?.let { Date(it) })
-            setDate(7, manufactureDateTo?.let { Date(it) })
-            setDate(8, manufactureDateFrom?.let { Date(it) })
+            setDate(3, manufactureDateFrom?.let { Date(it) })
+            setDate(4, manufactureDateTo?.let { Date(it) })
+            setDate(5, manufactureDateFrom?.let { Date(it) })
+            setDate(6, manufactureDateTo?.let { Date(it) })
 
+            setDate(7, manufactureDateFrom?.let { Date(it) })
+            setDate(8, manufactureDateTo?.let { Date(it) })
             setDate(9, manufactureDateFrom?.let { Date(it) })
-            setDate(10, manufactureDateTo?.let { Date(it) })
-            setDate(11, manufactureDateTo?.let { Date(it) })
 
-            setString(12, search)
-            setString(13, "%$search%")
+            setDate(10, manufactureDateFrom?.let { Date(it) })
+            setDate(11, manufactureDateTo?.let { Date(it) })
+            setDate(12, manufactureDateTo?.let { Date(it) })
+
+            setString(13, search)
             setString(14, "%$search%")
             setString(15, "%$search%")
+            setString(16, "%$search%")
 
-            setInt(16, type?.fromTransportType() ?: -1)
             setInt(17, type?.fromTransportType() ?: -1)
             setInt(18, type?.fromTransportType() ?: -1)
+            setInt(19, type?.fromTransportType() ?: -1)
 
-            setInt(19, seatsFrom ?: -1)
-            setInt(20, seatsTo ?: -1)
-            setInt(21, seatsFrom ?: -1)
-            setInt(22, seatsTo ?: -1)
+            setInt(20, seatsFrom ?: -1)
+            setInt(21, seatsTo ?: -1)
+            setInt(22, seatsFrom ?: -1)
+            setInt(23, seatsTo ?: -1)
 
-            setInt(23, seatsFrom ?: -1)
-            setInt(24, seatsTo ?: -1)
-            setInt(25, seatsFrom ?: -1)
-
+            setInt(24, seatsFrom ?: -1)
+            setInt(25, seatsTo ?: -1)
             setInt(26, seatsFrom ?: -1)
-            setInt(27, seatsTo ?: -1)
+
+            setInt(27, seatsFrom ?: -1)
             setInt(28, seatsTo ?: -1)
+            setInt(29, seatsTo ?: -1)
         }
 
         val result = statement.executeQuery()
@@ -206,6 +214,6 @@ class PostgresTransportDataSource(private val connection: Connection) : Transpor
     override suspend fun deleteTransport(transportId: Int): Unit = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(deleteTransport)
         statement.setInt(1, transportId)
-        statement.execute()
+        statement.executeUpdate()
     }
 }

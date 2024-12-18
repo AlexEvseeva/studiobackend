@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ua.rikutou.studiobackend.data.studio.PostgresStudioDataSource
 import java.sql.Connection
+import java.sql.Date
 import java.sql.Statement
 
 class PostgresEquipmentDataSource(private val connection: Connection) : EquipmentDataSource {
@@ -31,10 +32,15 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
             """
         private const val insertEquipment = "INSERT INTO $table ($name, $type, $comment, $rentPrice, $sId) VALUES (?, ?, ?, ?, ?)"
         private const val updateEquipment = "UPDATE $table SET $sId = ?, $name = ?, $type = ?, $comment = ?, $rentPrice = ? WHERE $eId = ?"
-        private const val delterEquipment = "DELETE FROM $table WHERE $eId = ?"
+        private const val delterEquipment = "UPDATE $table SET deleted = 1 WHERE $eId = ?"
         private const val getAllEquipment = """
             SELECT * FROM $table 
-            WHERE $sId = ?
+            left join documenttoequipment de on equipment.equipmentid = de.equipmentid
+            left join document d on de.documentid = d.documentid
+            where d.dateend < ?
+            or de.equipmentid is null
+            and equipment.$sId = ?
+            and equipment.deleted is null
             
             AND case
                 when ? is not null THEN $name ILIKE ? OR $comment ILIKE ?
@@ -120,12 +126,13 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
 
     override suspend fun getAllEquipment(studioId: Int, search: String?, equipmentType: EquipmentType?): List<Equipment> = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(getAllEquipment).apply {
-            setInt(1, studioId)
-            setString(2, search)
-            setString(3,"%$search%")
+            setDate(1, Date(java.util.Date().time))
+            setInt(2, studioId)
+            setString(3, search)
             setString(4,"%$search%")
-            setInt(5, equipmentType?.toDb() ?: -1)
+            setString(5,"%$search%")
             setInt(6, equipmentType?.toDb() ?: -1)
+            setInt(7, equipmentType?.toDb() ?: -1)
         }
 
         println("-------> $statement")
@@ -150,6 +157,6 @@ class PostgresEquipmentDataSource(private val connection: Connection) : Equipmen
     override suspend fun deleteById(equipmentId: Int): Unit = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(delterEquipment)
         statement.setInt(1, equipmentId)
-        statement.execute()
+        statement.executeUpdate()
     }
 }
