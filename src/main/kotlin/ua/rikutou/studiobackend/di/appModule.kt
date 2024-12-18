@@ -35,6 +35,8 @@ import ua.rikutou.studiobackend.security.token.TokenService
 import ua.rikutou.studiobackend.security.token.JwtTokenService
 import ua.rikutou.studiobackend.security.hashing.HashingService
 import ua.rikutou.studiobackend.security.hashing.SHA256HashingService
+import ua.rikutou.studiobackend.data.reportLocation.ReportLocationDataSource
+import ua.rikutou.studiobackend.data.reportLocation.PostgresReportLocationDataSource
 import java.sql.Connection
 import java.sql.DriverManager
 
@@ -62,6 +64,7 @@ fun appModule(
     singleOf(::PostgresFilmDataSource) { bind<FilmDataSource>() }
     singleOf(::PostgresDataSourceDocument) { bind<DocumentDateSource>() }
     singleOf(::PostgresStatisticDataSource) { bind<StatisticDataSource>() }
+    singleOf(::PostgresReportLocationDataSource) { bind<ReportLocationDataSource>() }
 
     single<TokenConfig> {
         TokenConfig(

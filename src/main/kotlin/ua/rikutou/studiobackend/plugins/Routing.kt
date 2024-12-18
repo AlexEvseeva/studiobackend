@@ -27,6 +27,7 @@ import ua.rikutou.studiobackend.plugins.route.location.createUpdateLocation
 import ua.rikutou.studiobackend.plugins.route.location.deleteLocation
 import ua.rikutou.studiobackend.plugins.route.location.getLocationById
 import ua.rikutou.studiobackend.plugins.route.location.getLocations
+import ua.rikutou.studiobackend.plugins.route.reportLocation.getReportLocation
 import ua.rikutou.studiobackend.plugins.route.section.createUpdateSection
 import ua.rikutou.studiobackend.plugins.route.section.deleteSection
 import ua.rikutou.studiobackend.plugins.route.section.getAllSections
@@ -98,6 +99,8 @@ fun Application.configureRouting() {
 
         createDocument()
         getStatistic()
+
+        getReportLocation()
 
         executeQuery()
     }
