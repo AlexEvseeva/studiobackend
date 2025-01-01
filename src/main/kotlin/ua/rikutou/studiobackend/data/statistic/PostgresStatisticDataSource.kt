@@ -94,7 +94,7 @@ class PostgresStatisticDataSource(val connection: Connection) : StatisticDataSou
             left join location on documenttolocation.locationid = location.locationid
             where document.studioid = ? AND document.datestart between ? AND ?
             group by location.locationid
-            order by count(location.locationid) desc limit 3)
+            order by count(location.locationid) desc limit 1)
         """
 
         private const val mostPopularTransport = """
@@ -105,7 +105,7 @@ class PostgresStatisticDataSource(val connection: Connection) : StatisticDataSou
             left join transport on documenttotransport.transportid = transport.transportid
             where document.studioid = ? AND document.datestart between ? AND ?
             group by transport.transportid
-            order by count(transport.transportid) desc limit 3)
+            order by count(transport.transportid) desc limit 1)
         """
 
         private const val mostPopularEquipment = """
@@ -116,7 +116,7 @@ class PostgresStatisticDataSource(val connection: Connection) : StatisticDataSou
             left join equipment on documenttoequipment.equipmentid = equipment.equipmentid
             where document.studioid = ? AND document.datestart between ? AND ?
             group by equipment.equipmentid
-            order by count(equipment.equipmentid) desc limit 3)
+            order by count(equipment.equipmentid) desc limit 1)
         """
 
         private const val mostPopularActor = """
